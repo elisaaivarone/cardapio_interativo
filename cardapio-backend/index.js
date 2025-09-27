@@ -1,19 +1,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config();
 
-const Item = require('./models/Item');
 const authRoutes = require('./routes/auth');
+const Item = require('./models/Item');
 
 const app = express();
 const PORT = 3001;
 
 app.use(express.json());
+app.use(cors());
 
 mongoose.connect(process.env.DATABASE_URL)
   .then(() => console.log('✅ Conectado ao MongoDB Atlas'))
   .catch((error) => console.log('❌ Erro ao conectar ao MongoDB Atlas:', error));
 
+// ROTAS DE AUTENTICAÇÃO
 app.use('/api/auth', authRoutes);
 
 // ROTAS DE ITENS DO CARDÁPIO
