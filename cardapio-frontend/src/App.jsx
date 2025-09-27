@@ -1,11 +1,11 @@
-// src/App.jsx
+import Login from './pages/Login/Login'; 
 
 function App() {
   return (
     <div>
-      <h1>Painel de Administração do Cardápio</h1>
+      <Login /> {/* 2. Use o componente aqui */}
     </div>
   )
 }
 
-export default App
+export default App;
