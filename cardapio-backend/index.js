@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const Item = require('./models/Item');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const PORT = 3001;
@@ -13,6 +14,9 @@ mongoose.connect(process.env.DATABASE_URL)
   .then(() => console.log('✅ Conectado ao MongoDB Atlas'))
   .catch((error) => console.log('❌ Erro ao conectar ao MongoDB Atlas:', error));
 
+app.use('/api/auth', authRoutes);
+
+// ROTAS DE ITENS DO CARDÁPIO
 app.get('/itens', async (req, res) => {
   try {
     // 1. Pedimos ao nosso Model "Item" para encontrar (find) todos os documentos
