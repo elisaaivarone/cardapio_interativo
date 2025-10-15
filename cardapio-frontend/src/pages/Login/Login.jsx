@@ -1,4 +1,5 @@
-import { useState } from 'react'; 
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
 import { loginUser } from '../../services/api';
 
@@ -6,9 +7,9 @@ function Login() {
   // Criando "estados" para guardar o email e a senha
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-   const [error, setError] = useState(''); 
+  const [error, setError] = useState(''); 
   const [loading, setLoading] = useState(false); 
-
+  const Navigate = useNavigate();
 
   // Função que faz o envio do formulário
   const handleSubmit = async (event) => {
@@ -20,6 +21,9 @@ function Login() {
       const data = await loginUser(email, password);
       console.log('Login bem-sucedido! Token:', data.token);
       // TODO: Salvar o token e redirecionar o usuário para o Dashboard
+      localStorage.setItem('token', data.token);
+
+      Navigate('/dashboard');
 
     } catch (err) {
       // Se o login falhar, a API retorna um erro que capturamos aqui
