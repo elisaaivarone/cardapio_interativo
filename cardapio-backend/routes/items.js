@@ -17,13 +17,12 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-   
  // Criamos um novo documento (um novo item) com base no nosso Model "Item"
-    const novoItem = new Item(req.body);
-        await novoItem.save();
-        res.status(201).json(novoItem);
+    const newItem = new Item(req.body);
+        await newItem.save();
+        res.status(201).json(newItem);
   } catch (error) {
-    res.status(400).json({ message: 'Dados inválidos ou incompletos.', error: error.message });
+     res.status(400).json({ message: 'Dados inválidos ou incompletos.', error: error.message });
   }
 });
 
