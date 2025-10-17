@@ -43,3 +43,13 @@ export const getItems = async () => {
     throw error.response.data;
   }
 };
+
+//Função para criar um novo item 
+export const createItem = async (itemData) => {
+  try {
+    const response = await api.post('/itens', itemData);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  } 
+};
