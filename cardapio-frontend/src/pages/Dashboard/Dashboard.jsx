@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getItems, createItem } from "../../services/api.js";
+import { getItems, createItem, deleteItem, updateItem } from "../../services/api.js";
 import ItemModal from "../../components/ItemModal/ItemModal";
 
 function Dashboard() {
@@ -10,6 +10,8 @@ const [items, setItems] = useState([]); //Guarda a lista de itens
 const [loading, setLoading] = useState(true); // Indica se está carregando
 const [error, setError] = useState(null); // Guarda as mensagens de erro
 const [isModalOpen, setIsModalOpen] = useState(false); // Controla a exibição do modal
+const [editingItem, setEditingItem] = useState(null); // Guarda o item que está sendo editado
+
 
 useEffect(() => {
     //Função para buscar os dados
@@ -33,17 +35,51 @@ const handleLogout = () => {
     navigate('/login');
 };
 
-const handleSaveItem = async (itemData) => {
+// Função para abrir o modal de edição
+const handleEdit = (item) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
+  };
+
+// Função para abrir o modal de criação
+const handleAddNew = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
+
+const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+  };
+
+const handleSave = async (itemData) => {
     try {
-      const newItem = await createItem(itemData);
-      setItems([...items, newItem]); // Adiciona o novo item à lista existente
-      setIsModalOpen(false); // Fecha o modal
+      if (editingItem) {
+        const updatedItem = await updateItem(editingItem._id, itemData);
+        setItems(items.map(item => item._id === updatedItem._id ? updatedItem : item));
+      } else {
+        const newItem = await createItem(itemData);
+        setItems([...items, newItem]);
+      }
+      handleCloseModal();
     } catch (err) {
-      console.error("Falha ao criar item:", err);
-      setError('Não foi possível salvar o novo item.');
+      console.error("Falha ao salvar item:", err);
+      setError('Não foi possível salvar o item.');
     }
   };
 
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm('Tem certeza que deseja deletar este item?')) {
+      return;
+    }
+    try {
+      await deleteItem(id);   
+      setItems(items.filter(item => item._id !== id)); // Remove o item da lista
+    } catch (err) {
+      console.error("Falha ao deletar item:", err);
+      setError('Não foi possível deletar o item.');
+    }
+  };
 
 if (loading) {
   return <div>Carregando cardápio...</div>;
@@ -53,8 +89,8 @@ if (loading) {
     <div>
       <h1>Dashboard</h1>
       <p>Bem-vindo ao painel de administração!</p>
-      <button onClick={handleLogout}>Lo</button>
-      <button onClick={() => setIsModalOpen(true)}>Adicionar Item</button>
+      <button onClick={handleLogout}>Logout</button>
+      <button onClick={handleAddNew}>Adicionar Item</button>
 
       <h2>Itens do Cardápio</h2>
         {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -64,7 +100,7 @@ if (loading) {
         ) : (
             <ul>
                 {items.map((item) => (
-                    <li key={item._id}>
+                    <li key={item._id} style={{ display: "flex"}}>
                       <img 
                           src={item.imageUrl} 
                           alt={item.name} 
@@ -73,6 +109,10 @@ if (loading) {
                       <h3><strong>{item.name}</strong></h3>
                       <p>{item.description}</p>
                       <p>R$ {item.price.toFixed(2)}</p>
+                      <p>Categoria: {item.category}</p>
+                      
+                      <button onClick={() => handleEdit(item)}>Editar</button>
+                      <button onClick={() => handleDeleteItem(item._id)}>Deletar</button>
                     </li>
                 ))}
             </ul>
@@ -80,8 +120,9 @@ if (loading) {
 
       <ItemModal 
       isOpen={isModalOpen} 
-      onClose={() => setIsModalOpen(false)} 
-      onSave={handleSaveItem}
+      onClose={handleCloseModal} 
+      onSave={handleSave}
+      currentItem={editingItem}
     />
     </div>
   );

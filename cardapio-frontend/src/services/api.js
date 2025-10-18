@@ -53,3 +53,24 @@ export const createItem = async (itemData) => {
     throw error.response.data;
   } 
 };
+
+//Função para deletar um item
+export const deleteItem = async (id) => {
+  try {
+    const response = await api.delete(`/itens/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+}
+
+//Função para atualizar um item
+export const updateItem = async (id, itemData) => {
+  try {
+    const response = await api.patch(`/itens/${id}`, itemData);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+

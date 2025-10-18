@@ -1,16 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./ItemModal.module.css";
 
-function ItemModal({ isOpen, onClose, onSave }) {
+function ItemModal({ isOpen, onClose, onSave, currentItem }) {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState(""); 
     const [imageUrl, setImageUrl] = useState("");
     const [category, setCategory] = useState("Lanches");
 
-    if (!isOpen) {
-        return null;    
-    }
+    useEffect(() => {
+      // Se editando, preencha os campos
+    if (isOpen && currentItem) {
+        setName(currentItem.name);
+        setDescription(currentItem.description);
+        setPrice(currentItem.price);
+        setImageUrl(currentItem.imageUrl);
+        setCategory(currentItem.category);  
+    } else {
+        // Se criando novo, limpe os campos
+        setName("");
+        setDescription("");
+        setPrice("");
+        setImageUrl("");
+        setCategory("Lanches");
+      }
+    }, [isOpen, currentItem]);
+
+    if (!isOpen) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -22,7 +38,7 @@ function ItemModal({ isOpen, onClose, onSave }) {
     return ( 
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <h2>Adicionar Novo Item</h2>
+        <h2>{currentItem ? "Editar Item" : "Adicionar Novo Item"}</h2>
         <form onSubmit={handleSubmit}>
           <input type="text" placeholder="Nome do item" value={name} onChange={e => setName(e.target.value)} required />
           <textarea placeholder="Descrição" value={description} onChange={e => setDescription(e.target.value)} required />
