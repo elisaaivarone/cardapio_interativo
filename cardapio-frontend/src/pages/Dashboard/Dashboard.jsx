@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getItems, createItem, deleteItem, updateItem } from "../../services/api.js";
 import ItemModal from "../../components/ItemModal/ItemModal";
+import styles from "./Dashboard.module.css";
 
 function Dashboard() {
   
@@ -68,7 +69,7 @@ const handleSave = async (itemData) => {
     }
   };
 
-  const handleDeleteItem = async (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm('Tem certeza que deseja deletar este item?')) {
       return;
     }
@@ -86,44 +87,60 @@ if (loading) {
 }
   
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Bem-vindo ao painel de administração!</p>
-      <button onClick={handleLogout}>Logout</button>
-      <button onClick={handleAddNew}>Adicionar Item</button>
+    <div className={styles.dashboard}>
+      <header className={styles.header}>
+        <div className={styles.headerInfo}>
+          <h1>Dashboard</h1>
+          <p>Bem-vindo ao painel de administração!</p>
+        </div>
+        <div className={styles.headerActions}>
+          <button onClick={handleLogout} className={`${styles.button} ${styles.buttonSecondary}`}>Logout</button>
+          <button onClick={handleAddNew} className={`${styles.button} ${styles.buttonPrimary}`}>Adicionar Item</button>
+        </div>
+      </header>
 
       <h2>Itens do Cardápio</h2>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
         {items.length === 0 && !error ? (
             <p>Nenhum item encontrado.</p>
         ) : (
-            <ul>
-                {items.map((item) => (
-                    <li key={item._id} style={{ display: "flex"}}>
-                      <img 
-                          src={item.imageUrl} 
-                          alt={item.name} 
-                          width="100"
-                          style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '1rem' }} />
-                      <h3><strong>{item.name}</strong></h3>
-                      <p>{item.description}</p>
-                      <p>R$ {item.price.toFixed(2)}</p>
-                      <p>Categoria: {item.category}</p>
-                      
-                      <button onClick={() => handleEdit(item)}>Editar</button>
-                      <button onClick={() => handleDeleteItem(item._id)}>Deletar</button>
-                    </li>
-                ))}
-            </ul>
-        )}
+            <ul className={styles.itemList}>
+          {items.map(item => (
+            <li key={item._id} className={styles.itemCard}>
+              <img 
+                src={item.imageUrl || 'https://via.placeholder.com/300x200?text=Sem+Imagem'} // Imagem placeholder
+                alt={item.name} 
+                className={styles.itemImage} 
+              />
+              <div className={styles.itemContent}>
+                <div className={styles.itemHeader}>
+                  <h3>{item.name}</h3>
+                  <span className={styles.itemPrice}>R$ {item.price.toFixed(2)}</span>
+                </div>
+                <p className={styles.itemDescription}>{item.description}</p>
+                <span className={styles.itemCategory}>{item.category}</span>
+                
+                <div className={styles.itemActions}>
+                  <button onClick={() => handleEdit(item)} className={`${styles.button} ${styles.buttonSmall}`}>
+                    Editar
+                  </button>
+                  <button onClick={() => handleDelete(item._id)} className={`${styles.button} ${styles.buttonSmall} ${styles.buttonSecondary}`}>
+                    Deletar
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <ItemModal 
-      isOpen={isModalOpen} 
-      onClose={handleCloseModal} 
-      onSave={handleSave}
-      currentItem={editingItem}
-    />
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
+        onSave={handleSave}
+        currentItem={editingItem} 
+      />
     </div>
   );
 }

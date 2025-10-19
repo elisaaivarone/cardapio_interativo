@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from './Login.module.css';
 import { loginUser } from '../../services/api';
+import { jwtDecode } from 'jwt-decode'; 
+
+import styles from './Login.module.css';
 
 function Login() {
   // Criando "estados" para guardar o email e a senha
@@ -9,32 +11,43 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(''); 
   const [loading, setLoading] = useState(false); 
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
 
+  
   // Função que faz o envio do formulário
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Previne que a página recarregue ao enviar
-    setError(''); // Limpa mensagens de erro anteriores
+    event.preventDefault();
+    setError('');
     setLoading(true);
 
-     try {
+    try {
+      // 1. CHAME A API E PEGUE OS DADOS 
       const data = await loginUser(email, password);
-      console.log('Login bem-sucedido! Token:', data.token);
-      // TODO: Salvar o token e redirecionar o usuário para o Dashboard
+      
+      // 2. SALVE O TOKEN NO LOCALSTORAGE
       localStorage.setItem('token', data.token);
 
-      Navigate('/dashboard');
+      // 3. DECODIFIQUE O TOKEN PARA PEGAR O USUÁRIO (incluindo o role)
+      const user = jwtDecode(data.token).user; 
+      
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // 4. DECIDA PARA ONDE IR usando 'navigate
+      if (user.role === 'admin') {
+        navigate('/dashboard');
+      } else if (user.role === 'hall') {
+        navigate('/order');
+      } else if (user.role === 'kitchen') {
+        navigate('/kitchen');
+      }
 
     } catch (err) {
-      // Se o login falhar, a API retorna um erro que capturamos aqui
       setError('Email ou senha inválidos. Tente novamente.');
       console.error('Erro no login:', err);
     } finally {
-      setLoading(false); // Finaliza o carregamento, independente do resultado
+      setLoading(false);
     }
-    
   };
-
   return (
     <div className={styles.loginPage}>
       <div className={styles.loginForm}>
