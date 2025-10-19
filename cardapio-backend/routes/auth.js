@@ -8,8 +8,11 @@ const router = express.Router();
 // ROTA DE REGISTRO (POST /api/auth/register)
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
+    if (!role || !['admin', 'hall', 'kitchen'].includes(role)) {
+      return res.status(400).json({ message: 'Função (role) inválida ou não fornecida.' });
+    }
     // Verifica se o usuário já existe
     let user = await User.findOne({ email });
     if (user) {
@@ -21,7 +24,12 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Cria o novo usuário
-    user = new User({ name, email, password: hashedPassword });
+    user = new User({ 
+      name, 
+      email, 
+      password: hashedPassword, 
+      role 
+    });
     await user.save();
 
     res.status(201).json({ message: 'Usuário registrado com sucesso!' });
@@ -49,7 +57,13 @@ router.post('/login', async (req, res) => {
     }
 
     // Se as senhas batem, cria um Token JWT
-    const payload = { user: { id: user.id } };
+    const payload = { 
+      user: { 
+        id: user.id,
+        role: user.role
+      }
+    };
+
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
