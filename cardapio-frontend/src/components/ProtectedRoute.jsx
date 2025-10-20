@@ -1,30 +1,44 @@
+// src/components/ProtectedRoute.jsx
 import { Navigate } from 'react-router-dom';
 
-function ProtectedRoute({ children, role }) {
-  // Verifica se o token existe no localStorage
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user'));
+// Função auxiliar para ler o localStorage de forma segura
+const getSafeUser = () => {
+  try {
+    const userString = localStorage.getItem('user');
+    // Se não houver usuário, retorne null
+    if (!userString) {
+      return null;
+    }
+    // Se houver, tente converter
+    return JSON.parse(userString);
+  } catch (error) {
+    // Se o JSON estiver corrompido, logue o erro e retorne null
+    console.error("Falha ao analisar o 'user' do localStorage:", error);
+    return null;
+  }
+};
 
-  // Se não houver token, redireciona para a página de login
+function ProtectedRoute({ children, role }) {
+  const token = localStorage.getItem('token');
+  const user = getSafeUser(); // Usamos nossa função segura
+
+  // Se não houver token ou usuário, expulsa para o login
   if (!token || !user) {
     return <Navigate to="/login" />;
   }
-
-  // Se uma role específica for exigida, verifica se o usuário tem essa role
-  if (user.role !== role) {
-    if (user.role === 'admin') {
-      return <Navigate to="/dashboard" />;
-    }
-    if (user.role === 'hall') {
-      return <Navigate to="/order" />;
-    }
-    if (user.role === 'kitchen') {
-      return <Navigate to="/kitchen" />;
-    }
-    
-  }
   
-  // Se houver token, renderiza o componente filho (a página que queremos proteger)
+  // Se o usuário não tiver a função correta...
+  if (user.role !== role) {
+    // ...manda ele de volta para a página inicial da SUA função.
+    if (user.role === 'admin') return <Navigate to="/dashboard" />;
+    if (user.role === 'hall') return <Navigate to="/order" />;
+    if (user.role === 'kitchen') return <Navigate to="/kitchen" />;
+    
+    // Se o role for desconhecido, apenas manda para o login
+    return <Navigate to="/login" />;
+  }
+
+  // Se tiver token E a função correta, libera o acesso
   return children;
 }
 

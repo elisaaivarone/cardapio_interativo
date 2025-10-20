@@ -46,9 +46,9 @@ export const loginUser = async (email, password) => {
 };
 
 //Função para buscar os itens do cardápio
-export const getItems = async () => {
+export const getItems = async (params = {}) => {
   try {
-    const response = await api.get('/itens');
+    const response = await api.get('/itens', { params });
     return response.data;
   } catch (error) {
     throw error.response.data;

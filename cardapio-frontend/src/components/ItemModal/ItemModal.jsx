@@ -7,22 +7,25 @@ function ItemModal({ isOpen, onClose, onSave, currentItem }) {
     const [price, setPrice] = useState(""); 
     const [imageUrl, setImageUrl] = useState("");
     const [category, setCategory] = useState("Lanches");
+    const [menu, setMenu] = useState("allDay");
 
     useEffect(() => {
       // Se editando, preencha os campos
     if (isOpen && currentItem) {
-        setName(currentItem.name);
-        setDescription(currentItem.description);
-        setPrice(currentItem.price);
-        setImageUrl(currentItem.imageUrl);
-        setCategory(currentItem.category);  
+      setName(currentItem.name);
+      setDescription(currentItem.description);
+      setPrice(currentItem.price);
+      setImageUrl(currentItem.imageUrl);
+      setCategory(currentItem.category); 
+      setMenu(currentItem.menu || 'allDay');
     } else {
         // Se criando novo, limpe os campos
-        setName("");
-        setDescription("");
-        setPrice("");
-        setImageUrl("");
-        setCategory("Lanches");
+      setName("");
+      setDescription("");
+      setPrice("");
+      setImageUrl("");
+      setCategory("Lanches");
+      setMenu("allDay");  
       }
     }, [isOpen, currentItem]);
 
@@ -30,7 +33,7 @@ function ItemModal({ isOpen, onClose, onSave, currentItem }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const itemData = { name, description, price: Number(price), imageUrl, category };
+        const itemData = { name, description, price: Number(price), imageUrl, category, menu };
         
         onSave(itemData);
     };
@@ -47,6 +50,10 @@ function ItemModal({ isOpen, onClose, onSave, currentItem }) {
             <option value="Lanches">Lanches</option>
             <option value="Bebidas">Bebidas</option>
             <option value="Sobremesas">Sobremesas</option>
+          </select>
+          <select value={menu} onChange={e => setMenu(e.target.value)}>
+            <option value="allDay">Resto do Dia (Almoço/Jantar)</option>
+            <option value="breakfast">Café da Manhã</option>
           </select>
           <input type="text" placeholder="URL da Imagem" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
           <div className={styles.buttons}>
