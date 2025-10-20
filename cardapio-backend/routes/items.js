@@ -5,8 +5,8 @@ const router = express.Router();
 // ROTAS DE ITENS DO CARDÁPIO
 router.get('/', async (req, res) => {
   try {
-    // 1. Pedimos ao nosso Model "Item" para encontrar (find) todos os documentos
-    const itens = await Item.find();
+    // 1. Buscamos os itens no banco de dados, podendo filtrar por query params
+    const itens = await Item.find(req.query);
     // 2. Retornamos os itens encontrados em formato JSON
     res.json(itens);
   } catch (error) {
