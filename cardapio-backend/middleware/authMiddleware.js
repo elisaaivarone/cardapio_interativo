@@ -17,7 +17,7 @@ function authMiddleware(req, res, next) {
     try {
         // 4. Verifica se o token é válido
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Armazena os dados do usuário na requisição
+        req.user = decoded.user; // Armazena os dados do usuário na requisição
         next(); // Continua para a próxima estapa
     } catch (error) {
         return res.status(401).json({ message: 'Token inválido.' });

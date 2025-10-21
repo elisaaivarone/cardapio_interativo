@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const itemRoutes = require('./routes/items');
 const authRoutes = require('./routes/auth');
+const orderRoutes = require('./routes/orders');
 const authMiddleware = require('./middleware/authMiddleware');
 
 require('dotenv').config();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(cors());
 app.use('api/auth', authRoutes);
 app.use('/api/itens', authMiddleware, itemRoutes);
+app.use('/api/orders', authMiddleware, orderRoutes);
 
 mongoose.connect(process.env.DATABASE_URL)
   .then(() => console.log('✅ Conectado ao MongoDB Atlas'))
