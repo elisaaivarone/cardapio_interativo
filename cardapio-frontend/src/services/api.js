@@ -94,4 +94,21 @@ export const createOrder = async (orderData) => {
     throw error.response.data;
   }   
 };
-
+//Função para buscar pedidos com filtro por status
+export const getOrders = async (status) => {
+  try {
+    const response = await api.get('/orders', { params: { status } });
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+//Função para atualizar o status de um pedido
+export const updateOrderStatus = async (id, status) => {
+  try {
+    const response = await api.patch(`/orders/${id}`, { status });
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
