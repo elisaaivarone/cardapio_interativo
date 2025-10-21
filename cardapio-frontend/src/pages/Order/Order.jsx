@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getItems } from '../../services/api';
+import { getItems, createOrder } from '../../services/api';
 import ProductModal from '../../components/ProductModal/ProductModal.jsx';
+
 
 import styles from './Order.module.css';
 
@@ -14,6 +15,7 @@ function Order() {
   const [breakfastItems, setBreakfastItems] = useState([]);
   const [allDayItems, setAllDayItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -69,6 +71,41 @@ function Order() {
     setCurrentOrder(newOrder);
   };
   
+  // FUNÇÃO PARA ENVIAR O PEDIDO
+  const handleSendOrder = async () => {
+    if (currentOrder.length === 0) {
+      alert('O pedido está vazio. Adicione itens antes de enviar.');
+      return;
+    }
+    if (!customerName.trim()) {
+      alert('Por favor, insira o nome do cliente.');
+      return;
+    }
+    setSending(true);
+
+    const orderData = {
+      clientName: customerName.trim(),
+      items: currentOrder.map(item => ({
+        productId: item._id,
+        name: item.name,
+        price: item.price,
+      })),
+      totalPrice: total
+    };
+    try {
+      const createdOrder =  await createOrder(orderData);
+      console.log('Pedido criado com sucesso:', createdOrder);
+      alert(`Pedido para ${customerName} enviado para a cozinha!`);
+      setCurrentOrder([]);
+      setCustomerName('');
+    } catch (error) {
+      console.error('Erro ao enviar pedido:', error);
+      alert('Erro ao enviar o pedido. Tente novamente.');
+    } finally {
+      setSending(false);
+    } 
+  };
+      
   // CÁLCULO DO TOTAL DO PEDIDO
   const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
 
@@ -109,9 +146,11 @@ function Order() {
       <div className={styles.summarySection}>
         <div className={styles.summaryHeader}> 
           <h2>Resumo do Pedido</h2>
+
           <button onClick={handleLogout} className={styles.logoutButton}>
             Logout
           </button>
+
         </div>  
         {/* AS VARIÁVEIS customerName E setCustomerName SÃO USADAS AQUI */}
         <div className={styles.inputGroup}>
@@ -134,10 +173,12 @@ function Order() {
                   <strong>{item.name}</strong>
                   <p>R$ {item.price.toFixed(2)}</p>
                 </div>
+
                 {/* A FUNÇÃO handleRemoveItem É USADA AQUI */}
                 <button onClick={() => handleRemoveItem(index)} className={styles.removeButton}>
                   X
                 </button>
+
               </li>
             ))
           )}
@@ -147,7 +188,15 @@ function Order() {
           {/* A VARIÁVEL total É USADA AQUI */}
           <strong>Total: R$ {total.toFixed(2)}</strong>
         </div>
-        <button className={styles.sendButton}>Enviar para Cozinha</button>
+
+        <button 
+        className={styles.sendButton}
+        onClick={handleSendOrder}
+        disabled={sending}
+        >
+          {sending ? 'Enviando...' : 'Enviar Para Cozinha'} {/* <-- Muda o texto do botão com base no estado "sending" */}
+        </button>
+      
       </div>
       <ProductModal
         isOpen={isModalOpen}
@@ -157,6 +206,6 @@ function Order() {
       />
     </div>
   );
-}
-
+} 
+  
 export default Order;
