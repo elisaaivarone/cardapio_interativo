@@ -3,6 +3,7 @@ import { ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Order from './pages/Order/Order';
 import Kitchen from './pages/Kitchen/Kitchen';
@@ -13,8 +14,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota pública de Login */}
+        {/* Rotas públicas */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Rota do Admin (Gerente) */}
         <Route path="/dashboard" element={ <ProtectedRoute role="admin"><Dashboard /></ProtectedRoute>} />
@@ -28,7 +30,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
 
-      // Configuração do ToastContainer para notificações
+      {/* Configuração do ToastContainer para notificações */}
       <ToastContainer 
       position="top-right" 
       autoClose={3000} 

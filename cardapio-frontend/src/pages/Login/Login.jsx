@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../../services/api';
 import { jwtDecode } from 'jwt-decode'; 
 
@@ -84,6 +84,9 @@ function Login() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
+        <p className={styles.registerLink}>
+          Não tem uma conta? <Link to="/register">Registre-se aqui</Link>
+        </p>
       </div>
     </div>
   );

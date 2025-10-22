@@ -45,6 +45,16 @@ export const loginUser = async (email, password) => {
   }
 };
 
+// Função de registro que o componente vai chamar
+export const registerUser = async (userData) => {
+  try {
+    const response = await api.post('/auth/register', userData);
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
 //Função para buscar os itens do cardápio
 export const getItems = async (params = {}) => {
   try {
