@@ -86,38 +86,46 @@ Este repositório utiliza uma estrutura de monorepo, contendo os dois projetos p
 
 Siga os passos abaixo para rodar o projeto em sua máquina:
 
-1. **Clone o Repositório:**
+**1. Clone o Repositório:**
 
 ```bash
-     git clone [[https://github.com/elisaaivarone/cardapio_interativo.git](https://github.com/elisaaivarone/cardapio_interativo.git)]
-    cd cardapio_interativo
-    ```
+git clone https://github.com/elisaaivarone/cardapio_interativo.git
+cd cardapio_interativo
+```
 
-2.  **Configure o Back-end:**
-    * Navegue até a pasta do back-end: `cd cardapio-backend`
-    * Instale as dependências: `npm install`
-    * Crie um arquivo `.env` na raiz de `cardapio-backend` com as seguintes variáveis (substitua pelos seus valores):
-        ```env
-        DATABASE_URL=SUA_CONNECTION_STRING_DO_MONGODB_ATLAS
-        JWT_SECRET=SEU_SEGREDO_JWT_LONGO_E_SEGURO
-        ```
-    * *Opcional: Popule o banco de dados (se necessário).*
+**2. Configure o Back-end:**
+* Navegue até a pasta do back-end: `cd cardapio-backend`
+* Instale as dependências: `npm install`
+* Crie um arquivo `.env` na raiz de `cardapio-backend` com as seguintes variáveis (substitua pelos seus valores):
+  
+```env
+DATABASE_URL=SUA_CONNECTION_STRING_DO_MONGODB_ATLAS
+JWT_SECRET=SEU_SEGREDO_JWT_LONGO_E_SEGURO
+```
 
-3.  **Configure o Front-end:**
-    * Navegue até a pasta do front-end: `cd ../cardapio-frontend`
-    * Instale as dependências: `npm install`
-    * *Nota: O front-end se conectará por padrão a `http://localhost:3001/api`. Se seu back-end rodar em outra porta, ajuste `baseURL` em `src/services/api.js`.*
+* *Opcional: Popule o banco de dados (se necessário).*
 
-4.  **Execute a Aplicação:**
-    * **Terminal 1 (na pasta `cardapio-backend`):** Inicie o servidor back-end:
-        ```bash
-        node index.js
-        ```
-    * **Terminal 2 (na pasta `cardapio-frontend`):** Inicie o servidor de desenvolvimento front-end:
-        ```bash
-        npm run dev
-        ```
-    * Abra seu navegador em `http://localhost:5173` (ou a porta indicada pelo Vite).
+**3. Configure o Front-end:**
+* Navegue até a pasta do front-end: `cd ../cardapio-frontend`
+* Instale as dependências: `npm install`
+* *Nota: O front-end se conectará por padrão a `http://localhost:3001/api`. Se seu back-end rodar em outra porta, ajuste `baseURL` em `src/services/api.js`.*
+
+**4. Execute a Aplicação:**
+* **Terminal 1 (na pasta `cardapio-backend`):** 
+* Inicie o servidor back-end:
+  
+```bash
+node index.js
+
+```
+
+* **Terminal 2 (na pasta `cardapio-frontend`):** Inicie o servidor de desenvolvimento front-end:
+  
+```bash
+npm run dev
+```
+
+* Abra seu navegador em `http://localhost:5173` (ou a porta indicada pelo Vite).
 
 ---
 
@@ -146,5 +154,3 @@ Siga os passos abaixo para rodar o projeto em sua máquina:
 ---
 
 Feito com ❤️ por Elisa Aivarone! ```
-
-
