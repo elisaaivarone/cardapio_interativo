@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Order from './pages/Order/Order';
@@ -24,6 +27,18 @@ function App() {
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
+
+      // Configuração do ToastContainer para notificações
+      <ToastContainer 
+      position="top-right" 
+      autoClose={3000} 
+      hideProgressBar={false} 
+      newestOnTop={false} 
+      closeOnClick 
+      rtl={false} 
+      pauseOnFocusLoss 
+      draggable 
+      pauseOnHover />
     </BrowserRouter>
   );
 }

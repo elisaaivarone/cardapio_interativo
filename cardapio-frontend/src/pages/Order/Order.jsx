@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { getItems, createOrder, getOrders, updateOrderStatus } from '../../services/api';
 import ProductModal from '../../components/ProductModal/ProductModal.jsx';
 
@@ -116,11 +117,11 @@ function Order() {
   // FUNÇÃO PARA ENVIAR O PEDIDO PARA A COZINHA
   const handleSendOrder = async () => {
     if (currentOrder.length === 0) {
-      alert('O pedido está vazio. Adicione itens antes de enviar.');
+      toast.warn('O pedido está vazio. Adicione itens antes de enviar.');
       return;
     }
     if (!customerName.trim()) {
-      alert('Por favor, insira o nome do cliente.');
+      toast.warn('Por favor, insira o nome do cliente.');
       return;
     }
     setSendingOrder(true);
@@ -137,12 +138,12 @@ function Order() {
     try {
       const createdOrder =  await createOrder(orderData);
       console.log('Pedido criado com sucesso:', createdOrder);
-      alert(`Pedido para ${customerName} enviado para a cozinha!`);
+      toast.success(`Pedido para ${customerName} foi enviado para a cozinha!`);
       setCurrentOrder([]);
       setCustomerName('');
     } catch (error) {
       console.error('Erro ao enviar pedido:', error);
-      alert('Erro ao enviar o pedido. Tente novamente.');
+      toast.error('Erro ao enviar o pedido. Tente novamente.');
     } finally {
       setSendingOrder(false);
     } 
@@ -153,9 +154,10 @@ function Order() {
     try {
       await updateOrderStatus(orderId, 'delivered');
       setReadyOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+      toast.info(`Pedido #${orderId.slice(-4)} marcado como entregue!`);
     } catch (error) {
       console.error("Erro ao marcar pedido como entregue:", error);
-      alert('Erro ao atualizar status do pedido. Tente novamente.');
+      toast.error('Erro ao atualizar status do pedido. Tente novamente.');
     }
   };
 

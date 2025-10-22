@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { getOrders, updateOrderStatus } from "../../services/api";
 import styles from "./Kitchen.module.css";
 
@@ -36,7 +37,7 @@ function Kitchen() {
       setPendingOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
     } catch (error) {
       console.error("Erro ao atualizar status do pedido:", error);
-      alert('Erro ao atualizar status do pedido. Tente novamente.');
+      toast.error('Erro ao atualizar status do pedido. Tente novamente.');
     }
   };
   

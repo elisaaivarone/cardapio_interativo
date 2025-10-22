@@ -50,6 +50,7 @@ function ItemModal({ isOpen, onClose, onSave, currentItem }) {
             <option value="Lanches">Lanches</option>
             <option value="Bebidas">Bebidas</option>
             <option value="Sobremesas">Sobremesas</option>
+            <option value="Acompanhamentos">Acompanhamentos</option>
           </select>
           <select value={menu} onChange={e => setMenu(e.target.value)}>
             <option value="allDay">Resto do Dia (Almoço/Jantar)</option>

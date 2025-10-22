@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import ConfirmToast from "../../components/ConfirmToast/ConfirmToast.jsx";
 import { getItems, createItem, deleteItem, updateItem } from "../../services/api.js";
 import ItemModal from "../../components/ItemModal/ItemModal";
+
 import styles from "./Dashboard.module.css";
 
 function Dashboard() {
@@ -65,21 +68,40 @@ const handleSave = async (itemData) => {
       handleCloseModal();
     } catch (err) {
       console.error("Falha ao salvar item:", err);
-      setError('Não foi possível salvar o item.');
+      toast.error('Não foi possível salvar o item.');
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja deletar este item?')) {
-      return;
-    }
+  const executeDelete = async (id) => {
     try {
       await deleteItem(id);   
       setItems(items.filter(item => item._id !== id)); // Remove o item da lista
+      toast.success('Item deletado com sucesso!');
     } catch (err) {
       console.error("Falha ao deletar item:", err);
-      setError('Não foi possível deletar o item.');
+      toast.error('Não foi possível deletar o item.');
     }
+  };
+
+  const handleDeleteConfirmation = (id) => {
+    toast(
+      // Passamos a função closeToast (que o react-toastify nos dá) e a função executeDelete
+      ({ closeToast }) => (
+        <ConfirmToast
+          closeToast={closeToast}
+          onConfirm={() => executeDelete(id)} 
+          message="Tem certeza que deseja deletar este item?"
+        />
+      ), 
+      {
+        position: "top-center", 
+        autoClose: false,      
+        closeOnClick: false,  
+        draggable: false,    
+        closeButton: true,     
+        pauseOnHover: true,
+      }
+    );
   };
 
 if (loading) {
@@ -125,7 +147,7 @@ if (loading) {
                   <button onClick={() => handleEdit(item)} className={`${styles.button} ${styles.buttonSmall}`}>
                     Editar
                   </button>
-                  <button onClick={() => handleDelete(item._id)} className={`${styles.button} ${styles.buttonSmall} ${styles.buttonSecondary}`}>
+                  <button onClick={() => handleDeleteConfirmation(item._id)} className={`${styles.button} ${styles.buttonSmall} ${styles.buttonSecondary}`}>
                     Deletar
                   </button>
                 </div>
