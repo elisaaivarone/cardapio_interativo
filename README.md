@@ -1,7 +1,8 @@
 # Burger Queen - Sistema de Pedidos (PDV)
 
-![Burger Queen Logo](screenshots/burger-queen-logo.png)
-Sistema de Ponto de Venda (PDV) completo para uma hamburgueria fictícia, construído como um projeto Full-Stack utilizando a MERN Stack. Permite o gerenciamento de produtos, controle de usuários por função (Admin, Salão, Cozinha) e o fluxo completo de pedidos, desde a anotação até a entrega.
+![Burger Queen Logo](screenshots/logo_burger_queen_github.png)
+
+* Sistema de Ponto de Venda (PDV) completo para uma hamburgueria fictícia, construído como um projeto Full-Stack utilizando a MERN Stack. Permite o gerenciamento de produtos, controle de usuários por função (Admin, Salão, Cozinha) e o fluxo completo de pedidos, desde a anotação até a entrega.
 
 **[Link para o Deploy da Aplicação]** (Será adicionado após o deploy)
 **[Link para o Deploy da API]**  
