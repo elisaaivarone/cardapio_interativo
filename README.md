@@ -1,9 +1,10 @@
 # Burger Queen - Sistema de Pedidos (PDV)
 
-![Burger Queen Logo Placeholder](link_para_uma_imagem_logo_aqui) Sistema de Ponto de Venda (PDV) completo para uma hamburgueria fictícia, construído como um projeto Full-Stack utilizando a MERN Stack. Permite o gerenciamento de produtos, controle de usuários por função (Admin, Salão, Cozinha) e o fluxo completo de pedidos, desde a anotação até a entrega.
+![Burger Queen Logo Placeholder](/screenshots/burger-queen-logo.png.png)  
+Sistema de Ponto de Venda (PDV) completo para uma hamburgueria fictícia, construído como um projeto Full-Stack utilizando a MERN Stack. Permite o gerenciamento de produtos, controle de usuários por função (Admin, Salão, Cozinha) e o fluxo completo de pedidos, desde a anotação até a entrega.
 
 **[Link para o Deploy da Aplicação]** (Será adicionado após o deploy)
-**[Link para o Deploy da API]** (Opcional, se a API for acessível publicamente)
+**[Link para o Deploy da API]**  
 
 ---
 
@@ -94,6 +95,7 @@ cd cardapio_interativo
 ```
 
 **2. Configure o Back-end:**
+
 * Navegue até a pasta do back-end: `cd cardapio-backend`
 * Instale as dependências: `npm install`
 * Crie um arquivo `.env` na raiz de `cardapio-backend` com as seguintes variáveis (substitua pelos seus valores):
@@ -106,12 +108,14 @@ JWT_SECRET=SEU_SEGREDO_JWT_LONGO_E_SEGURO
 * *Opcional: Popule o banco de dados (se necessário).*
 
 **3. Configure o Front-end:**
+
 * Navegue até a pasta do front-end: `cd ../cardapio-frontend`
 * Instale as dependências: `npm install`
 * *Nota: O front-end se conectará por padrão a `http://localhost:3001/api`. Se seu back-end rodar em outra porta, ajuste `baseURL` em `src/services/api.js`.*
 
 **4. Execute a Aplicação:**
-* **Terminal 1 (na pasta `cardapio-backend`):** 
+
+* **Terminal 1 (na pasta `cardapio-backend`):**
 * Inicie o servidor back-end:
   
 ```bash
@@ -119,7 +123,8 @@ node index.js
 
 ```
 
-* **Terminal 2 (na pasta `cardapio-frontend`):** Inicie o servidor de desenvolvimento front-end:
+* **Terminal 2 (na pasta `cardapio-frontend`):**
+* Inicie o servidor de desenvolvimento front-end:
   
 ```bash
 npm run dev
@@ -129,7 +134,7 @@ npm run dev
 
 ---
 
-## 📸 Screenshots (Opcional)
+## 📸 Screenshots
 
 **Dashboard do Administrador (Gerenciamento de Itens):**
 ![Lista de itens do cardápio](/screenshots/admin-dashboard.png)
@@ -142,7 +147,7 @@ npm run dev
 
 ---
 
-## ⏭️ Próximos Passos (Melhorias Futuras)
+## ⏭️ Próximos Passos
 
 * [ ] Implementar funcionalidade "Esqueci minha senha".
 * [ ] Adicionar gerenciamento de usuários (CRUD) no painel do Admin.
@@ -153,4 +158,4 @@ npm run dev
 
 ---
 
-Feito com ❤️ por Elisa Aivarone! ```
+Feito com ❤️ por Elisa Aivarone!
