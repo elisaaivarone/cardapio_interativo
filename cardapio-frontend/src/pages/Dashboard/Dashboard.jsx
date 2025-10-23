@@ -5,6 +5,7 @@ import ConfirmToast from "../../components/ConfirmToast/ConfirmToast.jsx";
 import { getItems, createItem, deleteItem, updateItem } from "../../services/api.js";
 import ItemModal from "../../components/ItemModal/ItemModal";
 
+import {FaPlus, FaSignOutAlt, FaEdit, FaTrash} from 'react-icons/fa';
 import styles from "./Dashboard.module.css";
 
 function Dashboard() {
@@ -116,8 +117,14 @@ if (loading) {
           <p>Bem-vindo ao painel de administração!</p>
         </div>
         <div className={styles.headerActions}>
-          <button onClick={handleLogout} className={`${styles.button} ${styles.buttonSecondary}`}>Logout</button>
-          <button onClick={handleAddNew} className={`${styles.button} ${styles.buttonPrimary}`}>Adicionar Item</button>
+
+          <button onClick={handleAddNew} className={`${styles.button} ${styles.buttonPrimary} ${styles.buttonWithIcon}`}>
+            <FaPlus />Adicionar Item
+          </button>
+          <button onClick={handleLogout} className={`${styles.button} ${styles.buttonSecondary} ${styles.buttonWithIcon}`}>
+            <FaSignOutAlt />Logout
+          </button>
+
         </div>
       </header>
 
@@ -144,12 +151,14 @@ if (loading) {
                 <span className={styles.itemCategory}>{item.category}</span>
                 
                 <div className={styles.itemActions}>
-                  <button onClick={() => handleEdit(item)} className={`${styles.button} ${styles.buttonSmall}`}>
-                    Editar
+                
+                  <button onClick={() => handleEdit(item)} className={`${styles.button} ${styles.buttonSmall} ${styles.buttonWithIcon}`}>
+                    <FaEdit /> Editar
                   </button>
-                  <button onClick={() => handleDeleteConfirmation(item._id)} className={`${styles.button} ${styles.buttonSmall} ${styles.buttonSecondary}`}>
-                    Deletar
+                  <button onClick={() => handleDeleteConfirmation(item._id)} className={`${styles.button} ${styles.buttonSmall} ${styles.buttonSecondary} ${styles.buttonWithIcon}`}>
+                    <FaTrash /> Deletar
                   </button>
+
                 </div>
               </div>
             </li>

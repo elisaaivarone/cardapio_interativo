@@ -136,3 +136,14 @@
   color: #d32f2f;
   font-weight: bold;
 }
+
+.buttonWithIcon {
+  display: inline-flex; 
+  align-items: center; 
+  gap: 0.5rem; 
+}
+
+/*Ajuste fino para ícones em botões pequenos */
+.buttonSmall.buttonWithIcon svg {
+    font-size: 0.9em; 
+}
