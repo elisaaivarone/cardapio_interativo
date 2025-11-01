@@ -2,7 +2,26 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getOrders, updateOrderStatus } from "../../services/api";
-import styles from "./Kitchen.module.css";
+
+// --- IMPORTAÇÕES DO MUI ---
+import Container from '@mui/material/Container';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import CircularProgress from '@mui/material/CircularProgress';
+// Ícones
+import LogoutIcon from '@mui/icons-material/Logout';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 function Kitchen() {
   const navigate = useNavigate();
@@ -25,9 +44,8 @@ function Kitchen() {
 
   useEffect(() => {
     fetchPendingOrders();
-    // Atualiza a lista de pedidos a cada 30 segundos
     const intervalId = setInterval(fetchPendingOrders, 30000);
-    return () => clearInterval(intervalId); // Limpa o intervalo ao desmontar o componente
+    return () => clearInterval(intervalId); 
   }, []);
 
   // Função para marcar um pedido como "ready"
@@ -57,44 +75,104 @@ function Kitchen() {
   };
 
   return (
-    <div className={styles.kitchenPage}>
-      <header className={styles.header}>
-        <h1>Pedidos Pendentes (Cozinha)</h1>
+    <Box sx={{ flexGrow: 1, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <AppBar position="static" sx={{ bgcolor: 'primary.main' }}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Cozinha _Pedidos Pendentes
+          </Typography>
+          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-        <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
-      </header>
-
-      {loading && <p>Carregando pedidos...</p>}
-      {error && <p className={styles.error}>{error}</p>}
-
-      <div className={styles.orderGrid}>
-        {!loading && pendingOrders.length === 0 && !error ? (
-          <p>Nenhum pedido pendente no momento.</p>
-        ) : (
-          pendingOrders.map(order => (
-            <div key={order._id} className={styles.orderCard}>
-              <h3>Pedido #{order._id.slice(-6)}</h3> {/* Mostra os últimos 6 dígitos do ID */}
-              <p><strong>Cliente:</strong> {order.clientName}</p>
-              <p><strong>Garçom:</strong> {order.waiterId?.name || 'N/A'}</p> {/* Usa o nome populado */}
-              <p><strong>Tempo:</strong> {calculateTimeElapsed(order.createdAt)}</p>
-              <ul className={styles.itemList}>
-                {order.items.map((item, index) => (
-                  <li key={index}>{item.name}</li>
-                ))}
-              </ul>
-
-              <button 
-                className={styles.readyButton} 
-                onClick={() => handleMarkAsReady(order._id)}
-              >
-                Marcar como Pronto
-              </button>
-              
-            </div>
-          ))
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+            <CircularProgress size={60} />
+          </Box>
         )}
-      </div>
-    </div>
+        {error && <Typography color="error" sx={{ textAlign: 'center', mt: 3 }}>{error}</Typography>}
+
+      {/* Grid de Pedidos */}
+        {!loading && (
+          <>
+            {pendingOrders.length === 0 && !error ? (
+              <Typography sx={{ textAlign: 'center', mt: 5, fontSize: '1.2rem', color: 'text.secondary' }}>
+                Nenhum pedido pendente no momento.
+              </Typography>
+        ) : (
+          <Grid container spacing={3}>
+            {pendingOrders.map(order => (
+              <Grid item key={order._id} xs={12} sm={6} md={4} lg={3}>
+                <Card 
+                  sx={{ 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    boxShadow: 3, 
+                    borderRadius: 2 
+                  }}>
+
+                  {/* Conteúdo do Card */}
+                  <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
+
+                  {/* Cabeçalho do Card */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, borderBottom: '1px solid #eee', pb: 1 }}>
+                      <Typography variant="h6" component="h3" color="primary">
+                        Pedido #{order._id.slice(-6)} 
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                        <AccessTimeIcon sx={{ fontSize: '1rem', mr: 0.5 }} />
+                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                            {calculateTimeElapsed(order.createdAt)}
+                          </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Detalhes do Pedido */}
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                      Cliente: {order.clientName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Garçom: {order.waiterId?.name || 'N/A'}
+                    </Typography>
+
+                  {/* Lista de Itens */}
+                    <List dense disablePadding sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: 150, mb: 1.5, border: '1px solid #eee', borderRadius: 1, p: 1 }}>
+                      {order.items.map((item, index) => (
+                        <ListItemText 
+                          key={index} 
+                          primary={`- ${item.name}`} 
+                          primaryTypographyProps={{ sx: { fontSize: '0.95rem' } }}
+                        />
+                      ))}
+                    </List>
+                  </CardContent>
+
+                  {/* Ação (Botão) */}
+                  <CardActions sx={{ mt: 'auto', p: 2, pt: 0 }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      fullWidth
+                      startIcon={<CheckCircleIcon />}
+                      onClick={() => handleMarkAsReady(order._id)}
+                      sx={{ fontWeight: 'bold' }}
+                    >
+                      Marcar como Pronto
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </>
+     )}
+    </Container>
+  </Box>
   );
 }
 

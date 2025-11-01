@@ -15,10 +15,15 @@ import Tab from '@mui/material/Tab';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Chip from '@mui/material/Chip';
+
 // Ícones
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
@@ -27,38 +32,38 @@ import FastfoodIcon from '@mui/icons-material/Fastfood';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining'; // Importado para uso futuro na aba 'ready'
+import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 // -------------------------
 
 import { getItems, createOrder, getOrders, updateOrderStatus } from '../../services/api';
 import ProductModal from '../../components/ProductModal/ProductModal'; 
 
+// --- Caminho relativo para o logo ---
+// Ajuste se o logo estiver em /src/assets ou outra pasta
+import logoPath from '../../assets/burger-queen-logo.png'; // Assumindo /public/screenshots/burger-queen-logo.png
 
 function Order() {
   const navigate = useNavigate();
-  const [menuType, setMenuType] = useState('allDay'); 
-  const [currentOrder, setCurrentOrder] = useState([]); 
-  const [customerName, setCustomerName] = useState(''); 
-
-  // Estados para os produtos carregados da API
+  // --- Estados ---
+  const [menuType, setMenuType] = useState('allDay');
+  const [currentOrder, setCurrentOrder] = useState([]);
+  const [customerName, setCustomerName] = useState('');
   const [breakfastItems, setBreakfastItems] = useState([]);
   const [allDayItems, setAllDayItems] = useState([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
-
-  // Estados para o modal de customização
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  
-  // Estado para o envio do pedido
   const [sendingOrder, setSendingOrder] = useState(false);
+  const [activeTab, setActiveTab] = useState('current'); 
+  const [readyOrders, setReadyOrders] = useState([]); 
+  const [loadingReadyOrders, setLoadingReadyOrders] = useState(false); 
+  const [errorReadyOrders, setErrorReadyOrders] = useState(''); 
+  const [waiterName, setWaiterName] = useState('Garçom');
 
-  // Estados para a aba "Pedidos Prontos"
-  const [activeTab, setActiveTab] = useState('current');
-  const [readyOrders, setReadyOrders] = useState([]);
-  const [loadingReadyOrders, setLoadingReadyOrders] = useState(false);
-  const [errorReadyOrders, setErrorReadyOrders] = useState('');
 
-  // useEffect para buscar os MENUS
+  
+  // Busca Menus
   useEffect(() => {
     const fetchMenus = async () => {
       try {
@@ -79,10 +84,10 @@ function Order() {
     fetchMenus();
   }, []);
 
-  // useEffect para buscar os PEDIDOS PRONTOS
+  // Busca Pedidos Prontos
   useEffect(() => {
     const fetchReadyOrders = async () => {
-      try {
+       try {
         setLoadingReadyOrders(true);
         setErrorReadyOrders('');
         const orders = await getOrders('ready');
@@ -94,32 +99,37 @@ function Order() {
         setLoadingReadyOrders(false);
       }
     };
-
     if (activeTab === 'ready') {
-      fetchReadyOrders();
-      const intervalId = setInterval(fetchReadyOrders, 30000); 
-      return () => clearInterval(intervalId); 
+        fetchReadyOrders();
+        const intervalId = setInterval(fetchReadyOrders, 30000); // Atualiza a cada 30s
+        return () => clearInterval(intervalId); // Limpa ao sair da aba
     }
   }, [activeTab]);
 
- 
-  const menuToDisplay = menuType === 'breakfast' ? breakfastItems : allDayItems;
+  // Pega nome do Garçom
+  useEffect(() => {
+      try {
+          const user = JSON.parse(localStorage.getItem('user'));
+          if (user && user.name) { setWaiterName(user.name); }
+      } catch (e) { console.error("Erro ao ler usuário do localStorage", e)}
+  }, []);
+  
 
-
+  // --- Funções Handler ---
+  // Decide se abre modal ou adiciona direto
   const handleAddItem = (item) => {
-    const needsCustomization = 
-      (item.category === 'Lanches' && item.menu === 'allDay') || 
-      item.category === 'Acompanhamentos';                     
-
+    const needsCustomization =
+      (item.category === 'Lanches' && item.menu === 'allDay') ||
+      item.category === 'Acompanhamentos';
     if (needsCustomization) {
       setSelectedItem(item);
       setIsModalOpen(true);
     } else {
-      handleAddToCart({ ...item, orderItemId: Date.now() }); 
+      handleAddToCart({ ...item, orderItemId: Date.now() });
     }
   };
 
-  // Adiciona item ao carrinho
+  // Adiciona item ao carrinho (chamado pelo handleAddItem ou pelo Modal)
   const handleAddToCart = (item) => {
     setCurrentOrder([...currentOrder, item]);
   };
@@ -129,51 +139,36 @@ function Order() {
     const newOrder = currentOrder.filter((_, index) => index !== indexToRemove);
     setCurrentOrder(newOrder);
   };
-  
-  // Envia o pedido para a API
-  const handleSendOrder = async () => {
-    if (currentOrder.length === 0) {
-      toast.warn('O pedido está vazio!');
-      return;
-    }
-    if (!customerName.trim()) {
-      toast.warn('Por favor, insira o nome do cliente.');
-      return;
-    }
 
-    setSendingOrder(true); 
+  // Envia pedido para API
+  const handleSendOrder = async () => {
+    if (currentOrder.length === 0) { toast.warn('O pedido está vazio!'); return; }
+    if (!customerName.trim()) { toast.warn('Por favor, insira o nome do cliente.'); return; }
+    setSendingOrder(true);
     const orderData = {
       clientName: customerName.trim(),
-      items: currentOrder.map(item => ({
-        productId: item._id, 
-        name: item.name, 
-        price: item.price 
-      })),
+      items: currentOrder.map(item => ({ productId: item._id, name: item.name, price: item.price })),
       totalPrice: total
     };
-
     try {
-      const createdOrder = await createOrder(orderData);
-      console.log('Pedido criado com sucesso:', createdOrder);
+      await createOrder(orderData);
       toast.success(`Pedido para ${customerName} enviado!`);
       setCurrentOrder([]);
       setCustomerName('');
     } catch (error) {
       console.error('Erro ao enviar pedido:', error);
       toast.error('Não foi possível enviar o pedido.');
-    } finally {
-      setSendingOrder(false); 
-    }
+    } finally { setSendingOrder(false); }
   };
 
-  // Função de Logout
+  // Logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };
 
-  // Marca um pedido como entregue (será usado na aba 'ready')
+  // Marca pedido como entregue
   const handleMarkAsDelivered = async (orderId) => {
       try {
           await updateOrderStatus(orderId, 'delivered');
@@ -185,245 +180,188 @@ function Order() {
       }
   };
 
-  // Calcula o total do pedido atual
+  const menuToDisplay = menuType === 'breakfast' ? breakfastItems : allDayItems;
   const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
 
-  
   return (
-    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}> 
-      
-      {/* SEÇÃO DO MENU (LADO ESQUERDO) */}
-      <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: 'white', borderRight: '1px solid #e0e0e0' }}> 
-        {/* Abas para trocar de menu */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs 
-            value={menuType} 
-            onChange={(event, newValue) => setMenuType(newValue)} 
-            aria-label="menu tabs"
-            variant="fullWidth"
-          >
-            <Tab label="Almoço / Jantar" value="allDay" icon={<FastfoodIcon />} iconPosition="start" />
-            <Tab label="Café da Manhã" value="breakfast" icon={<CoffeeIcon />} iconPosition="start" />
-          </Tabs>
+    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
+
+      {/* === COLUNA ESQUERDA === */}
+      <Paper
+        elevation={3}
+        sx={{ width: 220, flexShrink: 0, bgcolor: 'background.paper', color: 'white', display: 'flex', flexDirection: 'column', p: 1.5 }}
+      >
+        <Box sx={{ textAlign: 'center', p: 1, mb: 2 }}>
+            <img src={logoPath} alt="Burger Queen Logo" style={{ width: '80%', height: 'auto' }} />
         </Box>
-
-        {/* Grid de Produtos */}
-        {loadingMenu ? (
-          <Typography sx={{ textAlign: 'center', mt: 4, width: '100%'}}>Carregando produtos...</Typography>
-        ) : (
-          <Grid container spacing={2}> 
-            {menuToDisplay.map(item => (
-              <Grid item key={item._id} xs={6} sm={4} md={3} lg={2} sx={{ display: 'flex' }}> 
-                <Card sx={{ 
-                  width: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s ease-in-out',
-                  '&:hover': { 
-                    transform: 'scale(1.03)',
-                    boxShadow: 6
-                    }
-                  }}> 
-                  <CardActionArea 
-                    onClick={() => handleAddItem(item)} 
-                    sx={{ 
-                      flexGrow: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}> 
-                    <CardMedia
-                      component="img"
-                      height="120" 
-                      image={item.imageUrl || 'https://via.placeholder.com/200x120?text=Sem+Imagem'}
-                      alt={item.name}
-                      sx={{objectFit: 'cover'}}                    />
-                    <CardContent 
-                      sx={{ 
-                        textAlign: 'center',
-                        flexGrow: 1,
-                        p: 1, 
-                        display: 'flex', 
-                        flexDirection:'column',
-                        justifyContent: 'space-between',
-                        width: '100%'
-                      }}> 
-                      <Typography gutterBottom variant="subtitle1" component="div" 
-                        sx={{ 
-                          fontSize: '0.9rem',
-                          lineHeight: 1.3,
-                          fontWeight: '600',
-                          mb: 0.5,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2, // << LIMITA A 2 LINHAS
-                          WebkitBoxOrient: 'vertical',
-                          minHeight: 'calc(1.3em * 2)', 
-                        }}>
-                        {item.name}
-                      </Typography>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold', mt: 'auto' }}>
-                        R$ {item.price.toFixed(2)}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Box>
-
-      {/* SEÇÃO DO RESUMO (LADO DIREITO) */}
-      <Box sx={{ 
-        width: '380px', 
-        p: 2, 
-        display: 'flex', 
-        flexDirection: 'column',
-        bgcolor: '#303030', 
-        color: 'white' 
-      }}>
-        
-        {/* CABEÇALHO DO RESUMO */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="h5" component="h2"> 
-             {activeTab === 'current' ? 'Pedido Atual' : 'Pedidos Prontos'}
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="error" 
-            size="small" 
-            startIcon={<LogoutIcon />} 
-            onClick={handleLogout}
-          >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+          <Avatar  sx={{ width: 56, height: 56, mb: 1, bgcolor: 'secondary.main' }}>
+            {waiterName ? waiterName.charAt(0).toUpperCase() : <AccountCircleIcon />}
+          </Avatar>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{waiterName}</Typography>
+          <Typography variant="caption" sx={{ color: 'secondary.main' }}>Garçom/Garçonete</Typography>
+        </Box>
+        <Divider sx={{ mb: 2, bgcolor: 'grey.700' }} />
+        <Box sx={{ mt: 'auto' }}>
+           <Button variant="outlined" color="error" fullWidth startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ borderColor: 'secondary.main', color: 'secondary.main' }}>
             Logout
           </Button>
         </Box>
+      </Paper>
 
-        {/* ABAS DE NAVEGAÇÃO DO RESUMO */}
-        <Box sx={{ borderBottom: 1, borderColor: 'grey.700', mb: 2 }}>
-          <Tabs 
-            value={activeTab} 
-            onChange={(event, newValue) => setActiveTab(newValue)}
-            aria-label="summary tabs"
-            textColor="inherit" 
-            indicatorColor="primary" 
-            variant="fullWidth" 
+      {/* === COLUNA CENTRAL === */}
+      <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: '#f4f6f8' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs value={menuType} 
+              onChange={(event, newValue) => setMenuType(newValue)} 
+              aria-label="menu tabs" 
+              variant="fullWidth"
+              >
+                <Tab  label="Almoço / Jantar" value="allDay" icon={<FastfoodIcon />} iconPosition="start" />
+                <Tab label="Café da Manhã" value="breakfast" icon={<CoffeeIcon />} iconPosition="start" />
+            </Tabs>
+        </Box>
+        {loadingMenu ? (
+          <Typography sx={{ textAlign: 'center', mt: 4 }}>Carregando...</Typography>
+        ) : (
+          <Box 
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 4,
+              '@media (max-width: 1200px)': { gridTemplateColumns: 'repeat(3, 1fr)' },
+              '@media (max-width: 900px)': { gridTemplateColumns: 'repeat(2, 1fr)' },
+              '@media (max-width: 600px)': { gridTemplateColumns: 'repeat(1, 1fr)' },
+            }}
           >
-            <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%'}}/>
-            <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%'}}/>
-          </Tabs>
+            {menuToDisplay.map(item => (
+              <Card key={item._id}
+                sx={{
+                  height: '220px',
+                  display: 'flex', flexDirection: 'column', 
+                  borderRadius: 2, boxShadow: '0 4px 10px rgba(0,0,0,0.07)',
+                  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                  '&:hover': { transform: 'scale(1.03)', boxShadow: 8, }
+                }}
+              >
+                <CardActionArea
+                  onClick={() => handleAddItem(item)}
+                  sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1,}}
+                >
+                  <Box sx={{ height: 140, p: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', }}>
+                    <CardMedia
+                      component="img"
+                      sx={{ maxHeight: '100%', width: 'auto', objectFit: 'contain', borderRadius: 2,}}
+                      image={item.imageUrl || 'https://via.placeholder.com/200x130?text=Sem+Imagem'}
+                      alt={item.name}
+                    />
+                  </Box>
+                  <CardContent
+                    sx={{
+                      textAlign: 'center', p: 1, pt: 0.5, flexGrow: 1,
+                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2" component="div"
+                      sx={{
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                        height: '3em', 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis', // Adiciona "..."
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2, 
+                        WebkitBoxOrient: 'vertical',
+                        mb: 0.5,
+                        wordBreak: 'break-word',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {item.name}
+                    </Typography>
+                    <Typography variant="body1" color="secondary.main" sx={{ fontWeight: 'bold', mt:'auto', flexShrink: 0 }}>
+                      R$ {item.price.toFixed(2)}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      {/* === COLUNA DIREITA === */}
+      <Paper
+        elevation={3}
+        sx={{ width: 360, flexShrink: 0, p: 1.5, display: 'flex', flexDirection: 'column', bgcolor: 'background.rightMenu', color: 'primary.contrastText' }}
+      >
+       
+        <Box sx={{ borderBottom: 1, borderColor: '#ffffff', mb: 2 }}>
+            <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} aria-label="summary tabs" textColor="primary" indicatorColor="primary" variant="fullWidth" >
+                <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%', color:'secondary.contrastText'}}/>
+                <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%', color:'secondary.contrastText'}}/>
+            </Tabs>
         </Box>
 
-        {/* CONTEÚDO DAS ABAS */}
-        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}> 
-          
-          {/* CONTEÚDO ABA PEDIDO ATUAL */}
-          {activeTab === 'current' && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <TextField
-                label="Nome do Cliente"
-                variant="outlined"
-                size="small" 
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                sx={{ mb: 2, input: { color: 'white' }, label: { color: 'grey.400' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: 'grey.600' }, '&:hover fieldset': { borderColor: 'grey.400' }, '&.Mui-focused fieldset': { borderColor: 'primary.main' } } }} 
-              />
-
-              <List sx={{ flexGrow: 1, overflowY: 'auto', mb: 2, p: 0 }}> 
-                {currentOrder.length === 0 ? (
-                  <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Pedido vazio.</Typography>
-                ) : (
-                  currentOrder.map((item, index) => (
-                    <ListItem 
-                      key={item.orderItemId || index}
-                      secondaryAction={ 
-                        <IconButton edge="end" aria-label="delete" onClick={() => handleRemoveItem(index)} sx={{ color: 'error.light' }}>
-                          <DeleteIcon fontSize="small"/>
-                        </IconButton>
-                      }
-                      disablePadding 
-                      sx={{ borderBottom: '1px dashed grey' }}
-                    >
-                      <ListItemText 
-                        primary={item.name} 
-                        secondary={`R$ ${item.price.toFixed(2)}`} 
-                        primaryTypographyProps={{ sx: { color: 'white', fontSize: '0.95rem' } }}
-                        secondaryTypographyProps={{ sx: { color: 'grey.400', fontSize: '0.85rem' } }}
-                      />
-                    </ListItem>
-                  ))
-                )}
-              </List>
-
-              <Box sx={{ mt: 'auto', pt: 2, borderTop: '1px solid grey.700' }}> 
-                <Typography variant="h6" component="p" sx={{ textAlign: 'right', mb: 1 }}>
-                  Total: R$ {total.toFixed(2)}
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  color="success" 
-                  fullWidth 
-                  startIcon={<SendIcon />}
-                  onClick={handleSendOrder}
-                  disabled={sendingOrder}
-                  sx={{ p: 1.5, fontSize: '1rem' }} 
-                >
-                  {sendingOrder ? 'Enviando...' : 'Enviar para Cozinha'}
-                </Button>
-              </Box>
-            </Box>
-          )}
-
-          {/* CONTEÚDO ABA PEDIDOS PRONTOS (PLACEHOLDER POR ENQUANTO) */}
-          {activeTab === 'ready' && (
-             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                {loadingReadyOrders && <Typography sx={{textAlign: 'center', mt: 2}}>Carregando...</Typography>}
-                {errorReadyOrders && <Typography color="error" sx={{textAlign: 'center', mt: 2}}>{errorReadyOrders}</Typography>}
-                
-                {!loadingReadyOrders && readyOrders.length === 0 && !errorReadyOrders ? (
-                  <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Nenhum pedido pronto.</Typography>
-                ) : (
-                  <List sx={{ flexGrow: 1, overflowY: 'auto', p: 0 }}>
-                    {readyOrders.map(order => (
-                      <ListItem 
-                        key={order._id} 
-                        sx={{ bgcolor: 'grey.800', mb: 1, borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column' }}
-                      >
-                        <Box sx={{ width: '100%', mb:1 }}>
-                           <Typography variant="subtitle1">Cliente: {order.clientName}</Typography>
-                           <Typography variant="caption" sx={{ color: 'grey.400' }}>ID: #{order._id.slice(-4)} | Garçom: {order.waiterId?.name || 'N/A'}</Typography>
-                            <List disablePadding sx={{pl: 1, fontSize: '0.85rem'}}>
-                               {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name}`} sx={{m:0, p:0}} primaryTypographyProps={{fontSize: '0.9rem'}} />)}
-                            </List>
-                        </Box>
-                         <Button 
-                           variant="contained" 
-                           size="small"
-                           color="info" 
-                           startIcon={<DeliveryDiningIcon />}
-                           onClick={() => handleMarkAsDelivered(order._id)}
-                           fullWidth
-                         >
-                           Marcar Entregue
-                         </Button>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+            {activeTab === 'current' && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <TextField
+                  label="Nome do Cliente" variant="filled" size="small"
+                  value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                  fullWidth
+                  sx={{ mb: 1.5, bgcolor: 'grey.500', borderRadius: 1, '& .MuiInputBase-input': { color: 'secondary.contrastText' }, '& label': { color: 'secondary.contrastText' }, '& label.Mui-focused': { color: 'primary' } }}
+                />
+                <List sx={{ flexGrow: 1, overflowY: 'auto', mb: 1.5, p:0}}>
+                  {currentOrder.length === 0 ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Pedido vazio.</Typography> ) : (
+                    currentOrder.map((item, index) => (
+                      <ListItem key={item.orderItemId || index} secondaryAction={ <IconButton edge="end" size="small" onClick={() => handleRemoveItem(index)} sx={{ color: 'error.light' }}> <DeleteIcon fontSize="small"/> </IconButton> } disablePadding sx={{ borderBottom: '1px solid #ffffff', pt: 0.5, pb: 0.5 }} >
+                        <ListItemAvatar sx={{ minWidth: 48 }}> <Avatar variant="rounded" src={item.imageUrl || 'https://via.placeholder.com/40?text=IMG'} alt={item.name} sx={{ width: 40, height: 40 }}/> </ListItemAvatar>
+                        <ListItemText primary={item.name} secondary={`R$ ${item.price.toFixed(2)}`} primaryTypographyProps={{ sx: { color: 'secondary.contrastText', fontSize: '0.9rem', fontWeight: 500 } }} secondaryTypographyProps={{ sx: { color: '#efa337', fontSize: '1rem' } }} />
                       </ListItem>
-                    ))}
-                  </List>
-                )}
+                    ))
+                  )}
+                </List>
+                <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid grey.700' }}>
+                  <Typography variant="h6" component="p" sx={{ textAlign: 'right', mb: 1.5 }}> Total: R$ {total.toFixed(2)} </Typography>
+                  <Button variant="contained" color="success" fullWidth startIcon={<SendIcon />} onClick={handleSendOrder} disabled={sendingOrder} sx={{ p: 1.2, fontSize: '1rem', fontWeight: 'bold' }}> {sendingOrder ? 'Enviando...' : 'Enviar Pedido'} </Button>
+                </Box>
               </Box>
-          )}
-        </Box> 
-      </Box> 
-      
-      {/* Modal de Customização (ainda precisa ser refatorado com MUI se desejar) */}
-      <ProductModal 
+            )}
+            {activeTab === 'ready' && (
+               <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  {loadingReadyOrders && <Typography sx={{textAlign: 'center', mt: 2}}>Carregando...</Typography>}
+                  {errorReadyOrders && <Typography color="error" sx={{textAlign: 'center', mt: 2}}>{errorReadyOrders}</Typography>}
+                  {!loadingReadyOrders && readyOrders.length === 0 && !errorReadyOrders ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Nenhum pedido pronto.</Typography> ) : (
+                    <List sx={{ flexGrow: 1, overflowY: 'auto', p: 0 }}>
+                      {readyOrders.map(order => (
+                        <ListItem key={order._id} sx={{ bgcolor: 'background.default', mb: 1, borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column' }}>
+                          <Box sx={{ width: '100%', mb:1 }}>
+                             <Typography variant="subtitle1">Cliente: {order.clientName}</Typography>
+                             <Typography variant="caption" sx={{ color: 'grey.700' }}>ID: #{order._id.slice(-4)} | Garçom: {order.waiterId?.name || 'N/A'}</Typography>
+                              <List disablePadding sx={{pl: 1, fontSize: '0.85rem'}}>
+                                 {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name}`} sx={{m:0, p:0}} primaryTypographyProps={{fontSize: '0.9rem'}} />)}
+                              </List>
+                          </Box>
+                           <Button variant="contained" size="small" color="primary" startIcon={<DeliveryDiningIcon />} onClick={() => handleMarkAsDelivered(order._id)} fullWidth > Marcar Entregue </Button>
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </Box>
+            )}
+        </Box>
+      </Paper>
+
+      {/* Modal de Customização (AINDA NÃO REFATORADO) */}
+      <ProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         product={selectedItem}
         onAddToCart={handleAddToCart}
       />
-    </Box> // 
+    </Box> 
   );
 }
 

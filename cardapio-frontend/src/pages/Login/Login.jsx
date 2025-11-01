@@ -1,9 +1,22 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate,Link as RouterLink } from 'react-router-dom';
 import { loginUser } from '../../services/api';
 import { jwtDecode } from 'jwt-decode'; 
+// --- IMPORTAÇÕES DO MUI ---
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import CssBaseline from '@mui/material/CssBaseline'; // Garante fundo consistente
+import TextField from '@mui/material/TextField';
+import Link from '@mui/material/Link'; // O Link do MUI
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
+import CircularProgress from '@mui/material/CircularProgress'; // Para o loading
+import Alert from '@mui/material/Alert'; // Para exibir erros
+// Ícones
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
-import styles from './Login.module.css';
 
 function Login() {
   // Criando "estados" para guardar o email e a senha
@@ -48,47 +61,80 @@ function Login() {
       setLoading(false);
     }
   };
-  return (
-    <div className={styles.loginPage}>
-      <div className={styles.loginForm}>
-        <h2>Acessar Painel</h2>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              placeholder="seuemail@exemplo.com" 
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className={styles.inputGroup}>
-            <label htmlFor="password">Senha</label>
-            <input 
-              type="password" 
-              id="password" 
-              placeholder="********"
-              required 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          
-          {/* Exibe a mensagem de erro, se houver */}
-          {error && <p className={styles.error}>{error}</p>}
 
-          {/* Desabilita o botão e muda o texto durante o carregamento */}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-        <p className={styles.registerLink}>
-          Não tem uma conta? <Link to="/register">Registre-se aqui</Link>
-        </p>
-      </div>
-    </div>
+  return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <Box
+        sx={{
+          marginTop: 8, 
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Acessar Painel
+        </Typography>
+        
+        {/* Formulário */}
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Senha"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mt: 1 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            color="primary" 
+            disabled={loading}
+            sx={{ mt: 3, mb: 2, p: 1.5, fontSize: '1rem', fontWeight: 'bold' }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Entrar'}
+          </Button>
+        
+          <Grid container justifyContent="flex-end">
+            <Grid item>
+              {/* Usamos o Link do MUI e passamos o Link do Router para a prop 'component' */}
+              <Link component={RouterLink} to="/register" variant="body2">
+                {"Não tem uma conta? Registre-se aqui"}
+              </Link>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </Container>
   );
 }
 
