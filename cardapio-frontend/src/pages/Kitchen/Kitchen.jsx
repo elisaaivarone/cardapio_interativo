@@ -79,7 +79,7 @@ function Kitchen() {
       <AppBar position="static" sx={{ bgcolor: 'primary.main' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Cozinha _Pedidos Pendentes
+            Cozinha - Pedidos Pendentes
           </Typography>
           <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
             Logout

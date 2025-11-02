@@ -35,7 +35,7 @@
   * Exibição do tempo decorrido desde a criação do pedido.
   * Funcionalidade para marcar pedidos como "Prontos".
 * **UI Moderna:**
-  * Uso de CSS Modules para estilização encapsulada.
+  * Uso de Materail UI
   * Notificações Toast (`react-toastify`) para feedback ao usuário.
   * Design responsivo (básico).
 
@@ -58,7 +58,7 @@ Este projeto foi guiado pelas seguintes histórias de usuário:
   * React (com Vite)
   * React Router DOM (Roteamento)
   * Axios (Requisições HTTP)
-  * CSS Modules (Estilização)
+  * Material UI
   * React Toastify (Notificações)
   * JWT Decode (Leitura de Tokens JWT)
 * **Back-end:**
@@ -153,7 +153,7 @@ npm run dev
 * [ ] Implementar funcionalidade "Esqueci minha senha".
 * [ ] Adicionar gerenciamento de usuários (CRUD) no painel do Admin.
 * [ ] Adicionar quantidade aos itens do pedido.
-* [ ] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
+* [ x ] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
 * [ ] Adicionar testes unitários e de integração.
 * [ ] Implementar WebSockets para atualizações em tempo real (ex: cozinha ver pedidos instantaneamente).
 
