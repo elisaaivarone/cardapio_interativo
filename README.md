@@ -153,7 +153,7 @@ npm run dev
 * [ ] Implementar funcionalidade "Esqueci minha senha".
 * [ ] Adicionar gerenciamento de usuários (CRUD) no painel do Admin.
 * [ ] Adicionar quantidade aos itens do pedido.
-* [ x ] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
+* [x] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
 * [ ] Adicionar testes unitários e de integração.
 * [ ] Implementar WebSockets para atualizações em tempo real (ex: cozinha ver pedidos instantaneamente).
 
