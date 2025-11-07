@@ -34,6 +34,8 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 // -------------------------
 
 import { getItems, createOrder, getOrders, updateOrderStatus } from '../../services/api';
@@ -130,14 +132,47 @@ function Order() {
   };
 
   // Adiciona item ao carrinho (chamado pelo handleAddItem ou pelo Modal)
-  const handleAddToCart = (item) => {
-    setCurrentOrder([...currentOrder, item]);
+  const handleAddToCart = (itemToAdd) => {
+    const existingItem = currentOrder.find(item => item.name === itemToAdd.name);
+
+    if (existingItem) {
+      setCurrentOrder(currentOrder.map(item =>
+        item.name === itemToAdd.name
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCurrentOrder([...currentOrder, { ...itemToAdd, quantity: 1 }]);
+    }
   };
 
   // Remove item do carrinho
-  const handleRemoveItem = (indexToRemove) => {
-    const newOrder = currentOrder.filter((_, index) => index !== indexToRemove);
-    setCurrentOrder(newOrder);
+  const handleRemoveItem = (nameToRemove) => {
+    setCurrentOrder(currentOrder.filter(item => item.name !== nameToRemove));
+  };
+
+  // Diminui a quantidade
+  const handleDecreaseQuantity = (nameToDecrease) => {
+    const existingItem = currentOrder.find(item => item.name === nameToDecrease);
+
+    if (existingItem.quantity === 1) {
+      handleRemoveItem(nameToDecrease);
+    } else {
+      setCurrentOrder(currentOrder.map(item =>
+        item.name === nameToDecrease
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      ));
+    }
+  };
+
+  // Aumenta a quantidade
+  const handleIncreaseQuantity = (nameToIncrease) => {
+    setCurrentOrder(currentOrder.map(item =>
+      item.name === nameToIncrease
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
+    ));
   };
 
   // Envia pedido para API
@@ -147,8 +182,13 @@ function Order() {
     setSendingOrder(true);
     const orderData = {
       clientName: customerName.trim(),
-      items: currentOrder.map(item => ({ productId: item._id, name: item.name, price: item.price })),
-      totalPrice: total
+      items: currentOrder.map(item => ({ 
+        productId: item._id, 
+        name: item.name, 
+        price: item.price,
+        quantity: item.quantity
+      })),
+      totalPrice: total,
     };
     try {
       await createOrder(orderData);
@@ -181,7 +221,7 @@ function Order() {
   };
 
   const menuToDisplay = menuType === 'breakfast' ? breakfastItems : allDayItems;
-  const total = currentOrder.reduce((sum, item) => sum + item.price, 0);
+  const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity  ), 0);
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
@@ -294,13 +334,13 @@ function Order() {
       {/* === COLUNA DIREITA === */}
       <Paper
         elevation={3}
-        sx={{ width: 360, flexShrink: 0, p: 1.5, display: 'flex', flexDirection: 'column', bgcolor: 'background.rightMenu', color: 'primary.contrastText' }}
+        sx={{ width: 360, flexShrink: 0, p: 1.5, display: 'flex', flexDirection: 'column', bgcolor: '#303030', color: 'white' }}
       >
-       
-        <Box sx={{ borderBottom: 1, borderColor: '#ffffff', mb: 2 }}>
+        
+        <Box sx={{ borderBottom: 1, borderColor: 'grey.700', mb: 2 }}>
             <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} aria-label="summary tabs" textColor="primary" indicatorColor="primary" variant="fullWidth" >
-                <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%', color:'secondary.contrastText'}}/>
-                <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%', color:'secondary.contrastText'}}/>
+                <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.main' }}}/>
+                <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.main' }}}/>
             </Tabs>
         </Box>
 
@@ -311,40 +351,101 @@ function Order() {
                   label="Nome do Cliente" variant="filled" size="small"
                   value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                   fullWidth
-                  sx={{ mb: 1.5, bgcolor: 'grey.500', borderRadius: 1, '& .MuiInputBase-input': { color: 'secondary.contrastText' }, '& label': { color: 'secondary.contrastText' }, '& label.Mui-focused': { color: 'primary' } }}
+                  sx={{ mb: 1.5, bgcolor: 'grey.700', borderRadius: 1, '& .MuiInputBase-input': { color: 'white' }, '& label': { color: 'grey.400' }, '& label.Mui-focused': { color: 'primary.light' } }}
                 />
-                <List sx={{ flexGrow: 1, overflowY: 'auto', mb: 1.5, p:0}}>
+                <List sx={{ flexGrow: 1, overflowY: 'auto', mb: 1.5, p:0 }}>
                   {currentOrder.length === 0 ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Pedido vazio.</Typography> ) : (
-                    currentOrder.map((item, index) => (
-                      <ListItem key={item.orderItemId || index} secondaryAction={ <IconButton edge="end" size="small" onClick={() => handleRemoveItem(index)} sx={{ color: 'error.light' }}> <DeleteIcon fontSize="small"/> </IconButton> } disablePadding sx={{ borderBottom: '1px solid #ffffff', pt: 0.5, pb: 0.5 }} >
-                        <ListItemAvatar sx={{ minWidth: 48 }}> <Avatar variant="rounded" src={item.imageUrl || 'https://via.placeholder.com/40?text=IMG'} alt={item.name} sx={{ width: 40, height: 40 }}/> </ListItemAvatar>
-                        <ListItemText primary={item.name} secondary={`R$ ${item.price.toFixed(2)}`} primaryTypographyProps={{ sx: { color: 'secondary.contrastText', fontSize: '0.9rem', fontWeight: 500 } }} secondaryTypographyProps={{ sx: { color: '#efa337', fontSize: '1rem' } }} />
+                    currentOrder.map((item) => (
+                      <ListItem 
+                        key={item.name} // Key baseada no nome agrupado
+                        disablePadding 
+                        sx={{ borderBottom: '1px solid #424242', pt: 0.5, pb: 0.5, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+                      >
+                        {/* Linha 1: Info e Botão Deletar */}
+                        <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+                          <ListItemAvatar sx={{ minWidth: 48 }}> <Avatar variant="rounded" src={item.imageUrl || 'https://via.placeholder.com/40?text=IMG'} alt={item.name} sx={{ width: 40, height: 40 }}/> </ListItemAvatar>
+                          <ListItemText 
+                            primary={item.name} 
+                            secondary={`R$ ${(item.price * item.quantity).toFixed(2)}`} // Preço total do item
+                            primaryTypographyProps={{ sx: { color: 'white', fontSize: '0.9rem', fontWeight: 500 } }}
+                            secondaryTypographyProps={{ sx: { color: 'primary.light', fontSize: '0.9rem', fontWeight: 'bold' } }} // Destaque no preço
+                          />
+                          <IconButton edge="end" size="small" onClick={() => handleRemoveItem(item.name)} sx={{ color: 'error.light' }}> 
+                            <DeleteIcon fontSize="small"/> 
+                          </IconButton>
+                        </Box>
+                        
+                        {/* Linha 2: Controles de Quantidade */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', ml: '48px', mt: -0.5, width: 'calc(100% - 48px)', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton size="small" sx={{ color: 'grey.400' }} onClick={() => handleDecreaseQuantity(item.name)}>
+                              <RemoveCircleOutlineIcon fontSize="small" />
+                            </IconButton>
+                            <Typography sx={{ color: 'white', fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>
+                              {item.quantity}
+                            </Typography>
+                            <IconButton size="small" sx={{ color: 'grey.400' }} onClick={() => handleIncreaseQuantity(item.name)}>
+                              <AddCircleOutlineIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                          <Typography variant="caption" sx={{ color: 'grey.500', ml: 1 }}>
+                            (R$ {item.price.toFixed(2)} cada)
+                          </Typography>
+                        </Box>
                       </ListItem>
                     ))
                   )}
                 </List>
                 <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid grey.700' }}>
                   <Typography variant="h6" component="p" sx={{ textAlign: 'right', mb: 1.5 }}> Total: R$ {total.toFixed(2)} </Typography>
-                  <Button variant="contained" color="success" fullWidth startIcon={<SendIcon />} onClick={handleSendOrder} disabled={sendingOrder} sx={{ p: 1.2, fontSize: '1rem', fontWeight: 'bold' }}> {sendingOrder ? 'Enviando...' : 'Enviar Pedido'} </Button>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    fullWidth 
+                    startIcon={<SendIcon />} 
+                    onClick={handleSendOrder} 
+                    disabled={sendingOrder} 
+                    sx={{ 
+                        p: 1.2, fontSize: '1rem', fontWeight: 'bold',
+                        backgroundColor: '#efa337', // Cor Secundária (Laranja)
+                        color: '#000', // Texto escuro para contraste
+                        '&:hover': {
+                            backgroundColor: '#d88e23' // Laranja mais escuro
+                        }
+                    }}
+                  > 
+                    {sendingOrder ? 'Enviando...' : 'Enviar Pedido'} 
+                  </Button>
                 </Box>
               </Box>
             )}
+            
+            {/* Conteúdo da Aba: Pedidos Prontos */}
             {activeTab === 'ready' && (
                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  {loadingReadyOrders && <Typography sx={{textAlign: 'center', mt: 2}}>Carregando...</Typography>}
+                  {loadingReadyOrders && <Typography sx={{textAlign: 'center', mt: 2, color: 'grey.400'}}>Carregando...</Typography>}
                   {errorReadyOrders && <Typography color="error" sx={{textAlign: 'center', mt: 2}}>{errorReadyOrders}</Typography>}
                   {!loadingReadyOrders && readyOrders.length === 0 && !errorReadyOrders ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Nenhum pedido pronto.</Typography> ) : (
                     <List sx={{ flexGrow: 1, overflowY: 'auto', p: 0 }}>
                       {readyOrders.map(order => (
-                        <ListItem key={order._id} sx={{ bgcolor: 'background.default', mb: 1, borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column' }}>
+                        <ListItem key={order._id} sx={{ bgcolor: 'grey.800', mb: 1, borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column' }}>
                           <Box sx={{ width: '100%', mb:1 }}>
-                             <Typography variant="subtitle1">Cliente: {order.clientName}</Typography>
-                             <Typography variant="caption" sx={{ color: 'grey.700' }}>ID: #{order._id.slice(-4)} | Garçom: {order.waiterId?.name || 'N/A'}</Typography>
+                             <Typography variant="subtitle1" sx={{color: 'white'}}>Cliente: {order.clientName}</Typography>
+                             <Typography variant="caption" sx={{ color: 'grey.400' }}>ID: #{order._id.slice(-4)} | Garçom: {order.waiterId?.name || 'N/A'}</Typography>
                               <List disablePadding sx={{pl: 1, fontSize: '0.85rem'}}>
-                                 {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name}`} sx={{m:0, p:0}} primaryTypographyProps={{fontSize: '0.9rem'}} />)}
+                                 {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name} (x${item.quantity})`} sx={{m:0, p:0}} primaryTypographyProps={{fontSize: '0.9rem', color: 'grey.300'}} />)}
                               </List>
                           </Box>
-                           <Button variant="contained" size="small" color="primary" startIcon={<DeliveryDiningIcon />} onClick={() => handleMarkAsDelivered(order._id)} fullWidth > Marcar Entregue </Button>
+                           <Button 
+                            variant="contained" 
+                            size="small" 
+                            color="info" // Cor Ciano/Azul claro
+                            startIcon={<DeliveryDiningIcon />} 
+                            onClick={() => handleMarkAsDelivered(order._id)} 
+                            fullWidth 
+                           > 
+                            Marcar Entregue 
+                           </Button>
                         </ListItem>
                       ))}
                     </List>
@@ -353,7 +454,6 @@ function Order() {
             )}
         </Box>
       </Paper>
-
       {/* Modal de Customização (AINDA NÃO REFATORADO) */}
       <ProductModal
         isOpen={isModalOpen}
