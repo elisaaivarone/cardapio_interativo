@@ -12,25 +12,28 @@
 ## 🚀 Funcionalidades Principais
 
 * **Autenticação por Função:**
-  * Login seguro com JWT (JSON Web Tokens).
+  * Login seguro com JWT (JSON Web Tokens) e tela de registro de funcionários.
   * Diferentes perfis de usuário:
     * **Admin:** Gerencia produtos (CRUD completo) e usuários (futuramente).
     * **Salão (Hall):** Anota pedidos dos clientes, customiza itens e gerencia pedidos prontos.
     * **Cozinha (Kitchen):** Visualiza pedidos pendentes em ordem de chegada e marca como prontos.
     * Rotas protegidas garantindo que cada usuário acesse apenas sua área designada.
-* **Gerenciamento de Produtos (Admin):**
+* **Painel de Admin (`/dashboard`):**
   * Interface para Criar, Ler, Atualizar e Deletar (CRUD) produtos.
   * Associação de produtos a menus específicos ("Café da Manhã" ou "Resto do Dia").
+  * Notificações *Toast* para feedback de ações (ex: "Item deletado com sucesso")
   * Upload/Referência de imagens (atualmente por URL).
-* **Fluxo de Pedidos (Salão):**
-  * Interface estilo tablet para anotar pedidos.
-  * Seleção dinâmica de menus (Café da Manhã / Resto do Dia).
-  * Modal de customização para hambúrgueres (tipo de carne) e acompanhamentos (extras com custo adicional).
-  * Resumo do pedido com cálculo de total em tempo real.
-  * Envio do pedido para a API da cozinha.
-  * Visualização de pedidos marcados como "Prontos" pela cozinha.
-  * Funcionalidade para marcar pedidos como "Entregues".
-* **Interface da Cozinha:**
+* **Painel de Pedidos - Salão (`/order`):**
+  * Layout profissional de 3 colunas otimizado para tablets (Navegação/Usuário, Menu, Pedido).
+    * **Coluna de Menu:** Busca dinâmica de produtos da API, separados por abas de Menu (Café da Manhã / Almoço).
+    * **Coluna de Pedido:**
+      * Resumo do pedido com campo para nome do cliente.
+      * **Controle de Quantidade (+/-):** Permite agrupar itens idênticos e ajustar a quantidade.
+      * Cálculo do preço total em tempo real.
+      * Botão "Enviar para Cozinha" que posta o pedido na API.
+      * Aba "Pedidos Prontos" que busca (`GET /api/orders?status=ready`) e exibe pedidos prontos para entrega.
+    * **Modal de Customização:** Abre um pop-up para customizar itens (ex: tipo de hambúrguer, extras).
+* **Painel da Cozinha (`/kitchen`):**
   * Visualização em tempo real dos pedidos pendentes, ordenados por chegada.
   * Exibição do tempo decorrido desde a criação do pedido.
   * Funcionalidade para marcar pedidos como "Prontos".
@@ -58,7 +61,8 @@ Este projeto foi guiado pelas seguintes histórias de usuário:
   * React (com Vite)
   * React Router DOM (Roteamento)
   * Axios (Requisições HTTP)
-  * Material UI
+  * Material UI (MUI) (Biblioteca de componentes principal)
+  * @emotion/react & @emotion/styled (Motor de estilização do MUI)
   * React Toastify (Notificações)
   * JWT Decode (Leitura de Tokens JWT)
 * **Back-end:**
@@ -152,7 +156,7 @@ npm run dev
 
 * [ ] Implementar funcionalidade "Esqueci minha senha".
 * [ ] Adicionar gerenciamento de usuários (CRUD) no painel do Admin.
-* [ ] Adicionar quantidade aos itens do pedido.
+* [x] Adicionar quantidade aos itens do pedido.
 * [x] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
 * [ ] Adicionar testes unitários e de integração.
 * [ ] Implementar WebSockets para atualizações em tempo real (ex: cozinha ver pedidos instantaneamente).
