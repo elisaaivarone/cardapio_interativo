@@ -80,7 +80,6 @@ function Login() {
           Acessar Painel
         </Typography>
         
-        {/* Formulário */}
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
             margin="normal"
@@ -125,8 +124,7 @@ function Login() {
           </Button>
         
           <Grid container justifyContent="flex-end">
-            <Grid item>
-              {/* Usamos o Link do MUI e passamos o Link do Router para a prop 'component' */}
+            <Grid>
               <Link component={RouterLink} to="/register" variant="body2">
                 {"Não tem uma conta? Registre-se aqui"}
               </Link>

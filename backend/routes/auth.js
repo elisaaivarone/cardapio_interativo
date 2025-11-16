@@ -2,11 +2,12 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const upload = require('../middleware/upload.js');
 
 const router = express.Router();
 
 // ROTA DE REGISTRO (POST /api/auth/register)
-router.post('/register', async (req, res) => {
+router.post('/register', upload.single('profileImage'), async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
@@ -18,23 +19,34 @@ router.post('/register', async (req, res) => {
     if (user) {
       return res.status(400).json({ message: 'Usuário já existe.' });
     }
-
     // Criptografa a senha
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Define a URL da imagem de perfil, se fornecida
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
 
     // Cria o novo usuário
     user = new User({ 
       name, 
       email, 
       password: hashedPassword, 
-      role 
+      role,
+      imageUrl
     });
+
     await user.save();
 
     res.status(201).json({ message: 'Usuário registrado com sucesso!' });
 
   } catch (error) {
+    console.error("Erro no registro:", error);
+    if (error.name === 'ValidationError') {
+        return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: 'Erro no servidor.', error: error.message });
   }
 });
@@ -60,7 +72,9 @@ router.post('/login', async (req, res) => {
     const payload = { 
       user: { 
         id: user.id,
-        role: user.role
+        role: user.role,
+        name: user.name,
+        imageUrl: user.imageUrl
       }
     };
 
@@ -69,6 +83,7 @@ router.post('/login', async (req, res) => {
     res.json({ token });
 
   } catch (error) {
+    console.error("Erro no login:", error);
     res.status(500).json({ message: 'Erro no servidor.', error: error.message });
   }
 });

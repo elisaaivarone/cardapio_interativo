@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom'; 
 import { toast } from 'react-toastify';
-import { registerUser } from '../../services/api';
-
 // --- IMPORTAÇÕES DO MUI ---
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -23,30 +21,44 @@ import InputLabel from '@mui/material/InputLabel';
 // Ícones
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 
+import { registerUser } from '../../services/api';
 
 function Register() {
   const navigate = useNavigate();
+  
+  // Estados do formulário
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('hall'); 
+  const [profileImage, setProfileImage] = useState(null);
+  
+  // Estados de UI
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setError('');
+    setError(''); 
 
-    const userData = { name, email, password, role };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('role', role);
 
+    if (profileImage) {
+      formData.append('profileImage', profileImage); 
+    }
+    
     try {
-      const result = await registerUser(userData);
-      toast.success(result.message || 'Usuário registrado com sucesso!');
-      navigate('/login'); 
-    } catch (error) {
-      console.error('Erro no registro:', error);
-      setError(error.message || 'Erro ao registrar. Verifique os dados.');
+      const result = await registerUser(formData); 
+      toast.success(result.message || 'Usuário registrado com sucesso!'); 
+      navigate('/login');
+    } catch (err) {
+      console.error('Erro no registro:', err);
+      setError(err.message || 'Erro ao registrar. Verifique os dados.'); 
     } finally {
       setLoading(false);
     }
@@ -62,6 +74,8 @@ function Register() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          maxWidth: '700px',
+          margin: 'auto',
         }}
       >
         <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}> 
@@ -72,9 +86,9 @@ function Register() {
         </Typography>
         
         {/* Formulário */}
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 5 }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 5, width: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12} sm={6}>
               <TextField
                 autoComplete="name"
                 name="name"
@@ -87,7 +101,7 @@ function Register() {
                 onChange={(e) => setName(e.target.value)}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
@@ -99,7 +113,7 @@ function Register() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
@@ -112,7 +126,7 @@ function Register() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12} sm={6}>
               <FormControl fullWidth required>
                 <InputLabel id="role-select-label">Função</InputLabel>
                 <Select
@@ -127,6 +141,26 @@ function Register() {
                   <MenuItem value="admin">Admin</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid  xs={12} sm={6}>
+              <Button
+                variant="outlined"
+                component="label" 
+                fullWidth
+              >
+                Upload Foto de Perfil
+                <input 
+                  type="file" 
+                  hidden // O input real fica escondido
+                  accept="image/png, image/jpeg" 
+                  onChange={(e) => setProfileImage(e.target.files[0])} 
+                />
+              </Button>
+                {profileImage && (
+                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
+                  Arquivo: {profileImage.name}
+                </Typography>
+              )}
             </Grid>
           </Grid>
 
@@ -148,7 +182,7 @@ function Register() {
           </Button>
           
           <Grid container justifyContent="flex-end">
-            <Grid item>
+            <Grid>
               <Link component={RouterLink} to="/login" variant="body2">
                 {"Já tem uma conta? Faça login"}
               </Link>

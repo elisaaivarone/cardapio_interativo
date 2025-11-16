@@ -14,9 +14,7 @@ const PORT = 3001;
 
 app.use(express.json());
 app.use(cors());
-app.use('api/auth', authRoutes);
-app.use('/api/itens', authMiddleware, itemRoutes);
-app.use('/api/orders', authMiddleware, orderRoutes);
+app.use('/uploads', express.static('uploads'));
 
 mongoose.connect(process.env.DATABASE_URL)
   .then(() => console.log('✅ Conectado ao MongoDB Atlas'))
@@ -24,6 +22,8 @@ mongoose.connect(process.env.DATABASE_URL)
 
 // ROTAS DE AUTENTICAÇÃO
 app.use('/api/auth', authRoutes);
+app.use('/api/itens', authMiddleware, itemRoutes);
+app.use('/api/orders', authMiddleware, orderRoutes);
 
 
 app.get('/', (request, response) => {

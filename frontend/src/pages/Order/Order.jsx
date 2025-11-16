@@ -37,13 +37,10 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 // -------------------------
-
 import { getItems, createOrder, getOrders, updateOrderStatus } from '../../services/api';
 import ProductModal from '../../components/ProductModal/ProductModal'; 
 
-// --- Caminho relativo para o logo ---
-// Ajuste se o logo estiver em /src/assets ou outra pasta
-import logoPath from '../../assets/burger-queen-logo.png'; // Assumindo /public/screenshots/burger-queen-logo.png
+import logoPath from '../../assets/burger-queen-logo.png'; 
 
 function Order() {
   const navigate = useNavigate();
@@ -62,6 +59,7 @@ function Order() {
   const [loadingReadyOrders, setLoadingReadyOrders] = useState(false); 
   const [errorReadyOrders, setErrorReadyOrders] = useState(''); 
   const [waiterName, setWaiterName] = useState('Garçom');
+  const [waiterImageUrl, setWaiterImageUrl] = useState(null);
 
 
   
@@ -112,7 +110,12 @@ function Order() {
   useEffect(() => {
       try {
           const user = JSON.parse(localStorage.getItem('user'));
-          if (user && user.name) { setWaiterName(user.name); }
+          if (user && user.name) { 
+            setWaiterName(user.name);
+          }
+          if (user && user.imageUrl) {
+            setWaiterImageUrl(user.imageUrl);
+          }
       } catch (e) { console.error("Erro ao ler usuário do localStorage", e)}
   }, []);
   
@@ -235,11 +238,12 @@ function Order() {
             <img src={logoPath} alt="Burger Queen Logo" style={{ width: '80%', height: 'auto' }} />
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-          <Avatar  sx={{ width: 56, height: 56, mb: 1, bgcolor: 'secondary.main' }}>
-            {waiterName ? waiterName.charAt(0).toUpperCase() : <AccountCircleIcon />}
+          <Avatar
+           src={waiterImageUrl}
+           sx={{ width: 56, height: 56, mb: 1, bgcolor: 'secondary.main' }}>
+            {waiterImageUrl ? <img src={waiterImageUrl} alt={waiterName} style={{ width: '100%', height: '100%', borderRadius: '50%' }} /> : (waiterName ? waiterName.charAt(0).toUpperCase() : <AccountCircleIcon />)}
           </Avatar>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{waiterName}</Typography>
-          <Typography variant="caption" sx={{ color: 'secondary.main' }}>Garçom/Garçonete</Typography>
+          <Typography variant="caption" sx={{ color: 'secondary.main' }}>{waiterName}</Typography>
         </Box>
         <Divider sx={{ mb: 2, bgcolor: 'grey.700' }} />
         <Box sx={{ mt: 'auto' }}>
@@ -309,7 +313,7 @@ function Order() {
                         lineHeight: 1.3,
                         height: '3em', 
                         overflow: 'hidden',
-                        textOverflow: 'ellipsis', // Adiciona "..."
+                        textOverflow: 'ellipsis', 
                         display: '-webkit-box',
                         WebkitLineClamp: 2, 
                         WebkitBoxOrient: 'vertical',
@@ -334,7 +338,7 @@ function Order() {
       {/* === COLUNA DIREITA === */}
       <Paper
         elevation={3}
-        sx={{ width: 360, flexShrink: 0, p: 1.5, display: 'flex', flexDirection: 'column', bgcolor: '#303030', color: 'white' }}
+        sx={{ width: 360, flexShrink: 0, p: 1.5, display: 'flex', flexDirection: 'column', bgcolor: 'background.rightMenu', color: 'white', overflow: 'hidden' }}
       >
         
         <Box sx={{ borderBottom: 1, borderColor: 'grey.700', mb: 2 }}>
@@ -357,18 +361,18 @@ function Order() {
                   {currentOrder.length === 0 ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Pedido vazio.</Typography> ) : (
                     currentOrder.map((item) => (
                       <ListItem 
-                        key={item.name} // Key baseada no nome agrupado
+                        key={item.name} 
                         disablePadding 
                         sx={{ borderBottom: '1px solid #424242', pt: 0.5, pb: 0.5, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
                       >
-                        {/* Linha 1: Info e Botão Deletar */}
+
                         <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
                           <ListItemAvatar sx={{ minWidth: 48 }}> <Avatar variant="rounded" src={item.imageUrl || 'https://via.placeholder.com/40?text=IMG'} alt={item.name} sx={{ width: 40, height: 40 }}/> </ListItemAvatar>
                           <ListItemText 
                             primary={item.name} 
-                            secondary={`R$ ${(item.price * item.quantity).toFixed(2)}`} // Preço total do item
+                            secondary={`R$ ${(item.price * item.quantity).toFixed(2)}`} 
                             primaryTypographyProps={{ sx: { color: 'white', fontSize: '0.9rem', fontWeight: 500 } }}
-                            secondaryTypographyProps={{ sx: { color: 'primary.light', fontSize: '0.9rem', fontWeight: 'bold' } }} // Destaque no preço
+                            secondaryTypographyProps={{ sx: { color: 'primary.light', fontSize: '0.9rem', fontWeight: 'bold' } }}
                           />
                           <IconButton edge="end" size="small" onClick={() => handleRemoveItem(item.name)} sx={{ color: 'error.light' }}> 
                             <DeleteIcon fontSize="small"/> 
@@ -407,10 +411,10 @@ function Order() {
                     disabled={sendingOrder} 
                     sx={{ 
                         p: 1.2, fontSize: '1rem', fontWeight: 'bold',
-                        backgroundColor: '#efa337', // Cor Secundária (Laranja)
-                        color: '#000', // Texto escuro para contraste
+                        backgroundColor: '#efa337', 
+                        color: '#000', 
                         '&:hover': {
-                            backgroundColor: '#d88e23' // Laranja mais escuro
+                            backgroundColor: '#d88e23'
                         }
                     }}
                   > 
@@ -439,7 +443,7 @@ function Order() {
                            <Button 
                             variant="contained" 
                             size="small" 
-                            color="info" // Cor Ciano/Azul claro
+                            color="info" 
                             startIcon={<DeliveryDiningIcon />} 
                             onClick={() => handleMarkAsDelivered(order._id)} 
                             fullWidth 

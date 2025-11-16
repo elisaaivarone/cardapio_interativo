@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 
 // Cria uma instância do Axios com a URL base da API
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api', 
+  baseURL: 'http://localhost:3001/api' 
 });
 
 export const saveTokenAndGetUser = (token) => {
@@ -46,9 +46,9 @@ export const loginUser = async (email, password) => {
 };
 
 // Função de registro que o componente vai chamar
-export const registerUser = async (userData) => {
+export const registerUser = async (formData) => {
   try {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/auth/register', formData);
     return response.data;
   } catch (error) {
     throw error.response.data;
