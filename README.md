@@ -79,6 +79,23 @@ Este projeto foi guiado pelas seguintes histórias de usuário:
 
 ---
 
+## ✅ Testes Automatizados
+
+O projeto inclui uma suíte de testes de integração para o Back-end, garantindo a estabilidade das regras de negócio críticas (Autenticação e Criação de Pedidos).
+
+* **Ferramentas:**
+* [Jest](https://jestjs.io/) (Framework de Testes)
+* [Supertest](https://github.com/ladjs/supertest) (Requisições HTTP simuladas)
+
+**Como rodar os testes:**
+
+1. Acesse a pasta do back-end: `cd cardapio-backend`
+2. Execute o comando:
+  
+```bash
+  npm test
+```
+
 ## 🏗️ Estrutura do Projeto (Monorepo)
 
 Este repositório utiliza uma estrutura de monorepo, contendo os dois projetos principais:
@@ -158,7 +175,7 @@ npm run dev
 * [ ] Adicionar gerenciamento de usuários (CRUD) no painel do Admin.
 * [x] Adicionar quantidade aos itens do pedido.
 * [x] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
-* [ ] Adicionar testes unitários e de integração.
+* [x] Adicionar testes unitários e de integração.
 * [ ] Implementar WebSockets para atualizações em tempo real (ex: cozinha ver pedidos instantaneamente).
 
 ---
