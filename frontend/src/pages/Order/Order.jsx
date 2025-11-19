@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-
 // --- IMPORTAÇÕES DO MUI ---
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardMedia from '@mui/material/CardMedia';
@@ -18,51 +16,50 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
-import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
-import Chip from '@mui/material/Chip';
-
+import Drawer from '@mui/material/Drawer';
+import Badge from '@mui/material/Badge';
 // Ícones
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
-import LogoutIcon from '@mui/icons-material/Logout';
 import FastfoodIcon from '@mui/icons-material/Fastfood';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-// -------------------------
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CloseIcon from '@mui/icons-material/Close';
+// Serviços e Componentes
 import { getItems, createOrder, getOrders, updateOrderStatus } from '../../services/api';
-import ProductModal from '../../components/ProductModal/ProductModal'; 
-
-import logoPath from '../../assets/burger-queen-logo.png'; 
+import ProductModal from '../../components/ProductModal/ProductModal';
+import AppSidebar from '../../components/AppSidebar/AppSidebar'; 
 
 function Order() {
   const navigate = useNavigate();
+  
   // --- Estados ---
   const [menuType, setMenuType] = useState('allDay');
   const [currentOrder, setCurrentOrder] = useState([]);
   const [customerName, setCustomerName] = useState('');
   const [breakfastItems, setBreakfastItems] = useState([]);
   const [allDayItems, setAllDayItems] = useState([]);
-  const [loadingMenu, setLoadingMenu] = useState(true);
+  const [loadingMenu, setLoadingMenu] = useState(true); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [sendingOrder, setSendingOrder] = useState(false);
-  const [activeTab, setActiveTab] = useState('current'); 
-  const [readyOrders, setReadyOrders] = useState([]); 
-  const [loadingReadyOrders, setLoadingReadyOrders] = useState(false); 
-  const [errorReadyOrders, setErrorReadyOrders] = useState(''); 
-  const [waiterName, setWaiterName] = useState('Garçom');
-  const [waiterImageUrl, setWaiterImageUrl] = useState(null);
-
-
+  const [activeTab, setActiveTab] = useState('current');
+  const [readyOrders, setReadyOrders] = useState([]);
+  const [loadingReadyOrders, setLoadingReadyOrders] = useState(false);
+  const [errorReadyOrders, setErrorReadyOrders] = useState('');
   
+  const [user, setUser] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+
   // Busca Menus
   useEffect(() => {
     const fetchMenus = async () => {
@@ -94,34 +91,34 @@ function Order() {
         setReadyOrders(orders);
       } catch (error) {
         console.error("Erro ao buscar pedidos prontos:", error);
-        setErrorReadyOrders('Não foi possível carregar os pedidos prontos.');
+        setErrorReadyOrders('Erro ao carregar pedidos prontos.');
       } finally {
         setLoadingReadyOrders(false);
       }
     };
     if (activeTab === 'ready') {
         fetchReadyOrders();
-        const intervalId = setInterval(fetchReadyOrders, 30000); // Atualiza a cada 30s
-        return () => clearInterval(intervalId); // Limpa ao sair da aba
+        const intervalId = setInterval(fetchReadyOrders, 30000);
+        return () => clearInterval(intervalId);
     }
   }, [activeTab]);
 
-  // Pega nome do Garçom
+  // Busca Usuário
   useEffect(() => {
       try {
-          const user = JSON.parse(localStorage.getItem('user'));
-          if (user && user.name) { 
-            setWaiterName(user.name);
-          }
-          if (user && user.imageUrl) {
-            setWaiterImageUrl(user.imageUrl);
-          }
-      } catch (e) { console.error("Erro ao ler usuário do localStorage", e)}
+          const userData = JSON.parse(localStorage.getItem('user'));
+          setUser(userData);
+      } catch (e) { console.error("Erro ao ler usuário", e)}
   }, []);
-  
+
 
   // --- Funções Handler ---
-  // Decide se abre modal ou adiciona direto
+
+  //  Alterna o Drawer (Mobile)
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+  // Adiciona Item ao Pedido
   const handleAddItem = (item) => {
     const needsCustomization =
       (item.category === 'Lanches' && item.menu === 'allDay') ||
@@ -134,273 +131,143 @@ function Order() {
     }
   };
 
-  // Adiciona item ao carrinho (chamado pelo handleAddItem ou pelo Modal)
+  // Adiciona Item ao Carrinho
   const handleAddToCart = (itemToAdd) => {
     const existingItem = currentOrder.find(item => item.name === itemToAdd.name);
-
     if (existingItem) {
-      setCurrentOrder(currentOrder.map(item =>
-        item.name === itemToAdd.name
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
+      setCurrentOrder(currentOrder.map(item => item.name === itemToAdd.name ? { ...item, quantity: item.quantity + 1 } : item));
     } else {
       setCurrentOrder([...currentOrder, { ...itemToAdd, quantity: 1 }]);
     }
   };
 
-  // Remove item do carrinho
+  // Remove Item do Carrinho
   const handleRemoveItem = (nameToRemove) => {
     setCurrentOrder(currentOrder.filter(item => item.name !== nameToRemove));
   };
 
-  // Diminui a quantidade
+  // Diminui Quantidade do Item no Carrinho
   const handleDecreaseQuantity = (nameToDecrease) => {
     const existingItem = currentOrder.find(item => item.name === nameToDecrease);
-
     if (existingItem.quantity === 1) {
       handleRemoveItem(nameToDecrease);
     } else {
-      setCurrentOrder(currentOrder.map(item =>
-        item.name === nameToDecrease
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      ));
+      setCurrentOrder(currentOrder.map(item => item.name === nameToDecrease ? { ...item, quantity: item.quantity - 1 } : item));
     }
   };
-
-  // Aumenta a quantidade
+  // Aumenta Quantidade do Item no Carrinho
   const handleIncreaseQuantity = (nameToIncrease) => {
-    setCurrentOrder(currentOrder.map(item =>
-      item.name === nameToIncrease
-        ? { ...item, quantity: item.quantity + 1 }
-        : item
-    ));
+    setCurrentOrder(currentOrder.map(item => item.name === nameToIncrease ? { ...item, quantity: item.quantity + 1 } : item));
   };
-
-  // Envia pedido para API
+  // Envia Pedido
   const handleSendOrder = async () => {
     if (currentOrder.length === 0) { toast.warn('O pedido está vazio!'); return; }
-    if (!customerName.trim()) { toast.warn('Por favor, insira o nome do cliente.'); return; }
+    if (!customerName.trim()) { toast.warn('Insira o nome do cliente.'); return; }
     setSendingOrder(true);
     const orderData = {
       clientName: customerName.trim(),
-      items: currentOrder.map(item => ({ 
-        productId: item._id, 
-        name: item.name, 
-        price: item.price,
-        quantity: item.quantity
-      })),
-      totalPrice: total,
+      items: currentOrder.map(item => ({ productId: item._id, name: item.name, price: item.price, quantity: item.quantity })),
+      totalPrice: total
     };
     try {
       await createOrder(orderData);
-      toast.success(`Pedido para ${customerName} enviado!`);
+      toast.success(`Pedido enviado!`);
       setCurrentOrder([]);
       setCustomerName('');
+      setMobileOpen(false); 
     } catch (error) {
-      console.error('Erro ao enviar pedido:', error);
-      toast.error('Não foi possível enviar o pedido.');
+      console.error(error);
+      toast.error('Erro ao enviar pedido.');
     } finally { setSendingOrder(false); }
   };
 
-  // Logout
+  // Logout é tratado pelo AppSidebar, mas precisamos passá-lo
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };
 
-  // Marca pedido como entregue
   const handleMarkAsDelivered = async (orderId) => {
       try {
           await updateOrderStatus(orderId, 'delivered');
           setReadyOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
-          toast.info('Pedido marcado como entregue.');
-      } catch (err) {
-          console.error("Erro ao marcar pedido como entregue:", err);
-          toast.error('Não foi possível atualizar o status.');
+          toast.info('Entregue!');
+      } catch (err) { 
+          console.error(err);
+          toast.error('Erro ao atualizar status.'); 
       }
   };
 
   const menuToDisplay = menuType === 'breakfast' ? breakfastItems : allDayItems;
-  const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity  ), 0);
+  const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  return (
-    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f4f6f8' }}>
+  // --- CONTEÚDO DA COLUNA DIREITA (Resumo) ---
+  const OrderSummaryContent = (
+    <Paper
+      elevation={0} 
+      sx={{ 
+        display: 'flex', flexDirection: 'column', height: '100%', 
+        bgcolor: 'background.rightMenu', 
+        color: 'white', 
+        overflow: 'hidden'
+      }}
+    >
+      {/* Cabeçalho da Aba (Fixo) */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, p: 2, pb: 0, flexShrink: 0 }}>
+           <IconButton onClick={handleDrawerToggle} sx={{ display: { md: 'none' }, color: 'white' }}>
+             <CloseIcon />
+           </IconButton>
+        </Box>
 
-      {/* === COLUNA ESQUERDA === */}
-      <Paper
-        elevation={3}
-        sx={{ width: 220, flexShrink: 0, bgcolor: 'background.paper', color: 'white', display: 'flex', flexDirection: 'column', p: 1.5 }}
-      >
-        <Box sx={{ textAlign: 'center', p: 1, mb: 2 }}>
-            <img src={logoPath} alt="Burger Queen Logo" style={{ width: '80%', height: 'auto' }} />
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-          <Avatar
-           src={waiterImageUrl}
-           sx={{ width: 56, height: 56, mb: 1, bgcolor: 'secondary.main' }}>
-            {waiterImageUrl ? <img src={waiterImageUrl} alt={waiterName} style={{ width: '100%', height: '100%', borderRadius: '50%' }} /> : (waiterName ? waiterName.charAt(0).toUpperCase() : <AccountCircleIcon />)}
-          </Avatar>
-          <Typography variant="caption" sx={{ color: 'secondary.main' }}>{waiterName}</Typography>
-        </Box>
-        <Divider sx={{ mb: 2, bgcolor: 'grey.700' }} />
-        <Box sx={{ mt: 'auto' }}>
-           <Button variant="outlined" color="error" fullWidth startIcon={<LogoutIcon />} onClick={handleLogout} sx={{ borderColor: 'secondary.main', color: 'secondary.main' }}>
-            Logout
-          </Button>
-        </Box>
-      </Paper>
-
-      {/* === COLUNA CENTRAL === */}
-      <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: '#f4f6f8' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-            <Tabs value={menuType} 
-              onChange={(event, newValue) => setMenuType(newValue)} 
-              aria-label="menu tabs" 
-              variant="fullWidth"
-              >
-                <Tab  label="Almoço / Jantar" value="allDay" icon={<FastfoodIcon />} iconPosition="start" />
-                <Tab label="Café da Manhã" value="breakfast" icon={<CoffeeIcon />} iconPosition="start" />
-            </Tabs>
-        </Box>
-        {loadingMenu ? (
-          <Typography sx={{ textAlign: 'center', mt: 4 }}>Carregando...</Typography>
-        ) : (
-          <Box 
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 4,
-              '@media (max-width: 1200px)': { gridTemplateColumns: 'repeat(3, 1fr)' },
-              '@media (max-width: 900px)': { gridTemplateColumns: 'repeat(2, 1fr)' },
-              '@media (max-width: 600px)': { gridTemplateColumns: 'repeat(1, 1fr)' },
-            }}
-          >
-            {menuToDisplay.map(item => (
-              <Card key={item._id}
-                sx={{
-                  height: '220px',
-                  display: 'flex', flexDirection: 'column', 
-                  borderRadius: 2, boxShadow: '0 4px 10px rgba(0,0,0,0.07)',
-                  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                  '&:hover': { transform: 'scale(1.03)', boxShadow: 8, }
-                }}
-              >
-                <CardActionArea
-                  onClick={() => handleAddItem(item)}
-                  sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1,}}
-                >
-                  <Box sx={{ height: 140, p: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', }}>
-                    <CardMedia
-                      component="img"
-                      sx={{ maxHeight: '100%', width: 'auto', objectFit: 'contain', borderRadius: 2,}}
-                      image={item.imageUrl || 'https://via.placeholder.com/200x130?text=Sem+Imagem'}
-                      alt={item.name}
-                    />
-                  </Box>
-                  <CardContent
-                    sx={{
-                      textAlign: 'center', p: 1, pt: 0.5, flexGrow: 1,
-                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle2" component="div"
-                      sx={{
-                        fontWeight: 600,
-                        lineHeight: 1.3,
-                        height: '3em', 
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis', 
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2, 
-                        WebkitBoxOrient: 'vertical',
-                        mb: 0.5,
-                        wordBreak: 'break-word',
-                        textAlign: 'center'
-                      }}
-                    >
-                      {item.name}
-                    </Typography>
-                    <Typography variant="body1" color="secondary.main" sx={{ fontWeight: 'bold', mt:'auto', flexShrink: 0 }}>
-                      R$ {item.price.toFixed(2)}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            ))}
-          </Box>
-        )}
-      </Box>
-
-      {/* === COLUNA DIREITA === */}
-      <Paper
-        elevation={3}
-        sx={{ width: 360, flexShrink: 0, p: 1.5, display: 'flex', flexDirection: 'column', bgcolor: 'background.rightMenu', color: 'white', overflow: 'hidden' }}
-      >
-        
-        <Box sx={{ borderBottom: 1, borderColor: 'grey.700', mb: 2 }}>
-            <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} aria-label="summary tabs" textColor="primary" indicatorColor="primary" variant="fullWidth" >
-                <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.main' }}}/>
-                <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.main' }}}/>
+        <Box sx={{ borderBottom: 1, borderColor: 'grey.700', mb: 2, mx: 2, flexShrink: 0 }}>
+            <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} textColor="primary" indicatorColor="primary" variant="fullWidth" >
+                <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.light' }}}/>
+                <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.light' }}}/>
             </Tabs>
         </Box>
 
-        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+        {/* Área de Conteúdo (Cresce e Rola) */}
+        <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', px: 2 }}>
+            
             {activeTab === 'current' && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                 <TextField
                   label="Nome do Cliente" variant="filled" size="small"
                   value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                   fullWidth
-                  sx={{ mb: 1.5, bgcolor: 'grey.700', borderRadius: 1, '& .MuiInputBase-input': { color: 'white' }, '& label': { color: 'grey.400' }, '& label.Mui-focused': { color: 'primary.light' } }}
+                  sx={{ mb: 1.5, bgcolor: 'grey.700', borderRadius: 1, flexShrink: 0, '& .MuiInputBase-input': { color: 'white' }, '& label': { color: 'grey.400' }, '& label.Mui-focused': { color: 'primary.light' } }}
                 />
+                
                 <List sx={{ flexGrow: 1, overflowY: 'auto', mb: 1.5, p:0 }}>
-                  {currentOrder.length === 0 ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Pedido vazio.</Typography> ) : (
+                  {currentOrder.length === 0 ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Vazio.</Typography> ) : (
                     currentOrder.map((item) => (
-                      <ListItem 
-                        key={item.name} 
-                        disablePadding 
-                        sx={{ borderBottom: '1px solid #424242', pt: 0.5, pb: 0.5, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
-                      >
-
-                        <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                          <ListItemAvatar sx={{ minWidth: 48 }}> <Avatar variant="rounded" src={item.imageUrl || 'https://via.placeholder.com/40?text=IMG'} alt={item.name} sx={{ width: 40, height: 40 }}/> </ListItemAvatar>
-                          <ListItemText 
-                            primary={item.name} 
-                            secondary={`R$ ${(item.price * item.quantity).toFixed(2)}`} 
-                            primaryTypographyProps={{ sx: { color: 'white', fontSize: '0.9rem', fontWeight: 500 } }}
-                            secondaryTypographyProps={{ sx: { color: 'primary.light', fontSize: '0.9rem', fontWeight: 'bold' } }}
-                          />
-                          <IconButton edge="end" size="small" onClick={() => handleRemoveItem(item.name)} sx={{ color: 'error.light' }}> 
-                            <DeleteIcon fontSize="small"/> 
-                          </IconButton>
+                      <ListItem key={item.name} disablePadding sx={{ borderBottom: '1px solid #424242', pt: 1, pb: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+                           <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                              <ListItemAvatar sx={{ minWidth: 40 }}> <Avatar variant="rounded" src={item.imageUrl} alt={item.name} sx={{ width: 35, height: 35 }}/> </ListItemAvatar>
+                              <ListItemText 
+                                primary={item.name} 
+                                secondary={`R$ ${(item.price * item.quantity).toFixed(2)}`} 
+                                primaryTypographyProps={{ sx: { color: 'white', fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' } }} 
+                                secondaryTypographyProps={{ sx: { color: 'primary.light', fontSize: '0.8rem', fontWeight: 'bold' } }} 
+                              />
+                           </Box>
+                           <IconButton size="small" onClick={() => handleRemoveItem(item.name)} sx={{ color: 'error.main', p: 0.5 }}> <DeleteIcon fontSize="small"/> </IconButton>
                         </Box>
-                        
-                        {/* Linha 2: Controles de Quantidade */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', ml: '48px', mt: -0.5, width: 'calc(100% - 48px)', justifyContent: 'space-between' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <IconButton size="small" sx={{ color: 'grey.400' }} onClick={() => handleDecreaseQuantity(item.name)}>
-                              <RemoveCircleOutlineIcon fontSize="small" />
-                            </IconButton>
-                            <Typography sx={{ color: 'white', fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>
-                              {item.quantity}
-                            </Typography>
-                            <IconButton size="small" sx={{ color: 'grey.400' }} onClick={() => handleIncreaseQuantity(item.name)}>
-                              <AddCircleOutlineIcon fontSize="small" />
-                            </IconButton>
-                          </Box>
-                          <Typography variant="caption" sx={{ color: 'grey.500', ml: 1 }}>
-                            (R$ {item.price.toFixed(2)} cada)
-                          </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', ml: '40px', mt: 0.5, width: 'calc(100% - 40px)', justifyContent: 'space-between' }}>
+                           <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: 'grey.800', borderRadius: 5 }}>
+                              <IconButton size="small" sx={{ color: 'white', p: 0.5 }} onClick={() => handleDecreaseQuantity(item.name)}> <RemoveCircleOutlineIcon fontSize="small" /> </IconButton>
+                              <Typography sx={{ color: 'white', fontWeight: 'bold', minWidth: '20px', textAlign: 'center', fontSize: '0.9rem' }}> {item.quantity} </Typography>
+                              <IconButton size="small" sx={{ color: 'white', p: 0.5 }} onClick={() => handleIncreaseQuantity(item.name)}> <AddCircleOutlineIcon fontSize="small" /> </IconButton>
+                           </Box>
                         </Box>
                       </ListItem>
                     ))
                   )}
                 </List>
-                <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid grey.700' }}>
+
+                <Box sx={{ mt: 'auto', pt: 1.5, borderTop: '1px solid grey.700', flexShrink: 0, pb: 2 }}>
                   <Typography variant="h6" component="p" sx={{ textAlign: 'right', mb: 1.5 }}> Total: R$ {total.toFixed(2)} </Typography>
                   <Button 
                     variant="contained" 
@@ -410,46 +277,29 @@ function Order() {
                     onClick={handleSendOrder} 
                     disabled={sendingOrder} 
                     sx={{ 
-                        p: 1.2, fontSize: '1rem', fontWeight: 'bold',
-                        backgroundColor: '#efa337', 
-                        color: '#000', 
-                        '&:hover': {
-                            backgroundColor: '#d88e23'
-                        }
+                        p: 1.2, fontSize: '1rem', fontWeight: 'bold', 
+                        bgcolor: 'primary.main', 
+                        color: 'secondary.contrastText', 
+                        '&:hover': { bgcolor: 'primary.dark' } 
                     }}
                   > 
-                    {sendingOrder ? 'Enviando...' : 'Enviar Pedido'} 
+                    {sendingOrder ? 'Enviando...' : 'Enviar'} 
                   </Button>
                 </Box>
               </Box>
             )}
             
-            {/* Conteúdo da Aba: Pedidos Prontos */}
             {activeTab === 'ready' && (
-               <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  {loadingReadyOrders && <Typography sx={{textAlign: 'center', mt: 2, color: 'grey.400'}}>Carregando...</Typography>}
-                  {errorReadyOrders && <Typography color="error" sx={{textAlign: 'center', mt: 2}}>{errorReadyOrders}</Typography>}
-                  {!loadingReadyOrders && readyOrders.length === 0 && !errorReadyOrders ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Nenhum pedido pronto.</Typography> ) : (
+               <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                  {!loadingReadyOrders && readyOrders.length === 0 && !errorReadyOrders ? ( <Typography sx={{ textAlign: 'center', color: 'grey.500', mt: 2 }}>Vazio.</Typography> ) : (
                     <List sx={{ flexGrow: 1, overflowY: 'auto', p: 0 }}>
                       {readyOrders.map(order => (
-                        <ListItem key={order._id} sx={{ bgcolor: 'grey.800', mb: 1, borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column' }}>
-                          <Box sx={{ width: '100%', mb:1 }}>
-                             <Typography variant="subtitle1" sx={{color: 'white'}}>Cliente: {order.clientName}</Typography>
-                             <Typography variant="caption" sx={{ color: 'grey.400' }}>ID: #{order._id.slice(-4)} | Garçom: {order.waiterId?.name || 'N/A'}</Typography>
-                              <List disablePadding sx={{pl: 1, fontSize: '0.85rem'}}>
-                                 {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name} (x${item.quantity})`} sx={{m:0, p:0}} primaryTypographyProps={{fontSize: '0.9rem', color: 'grey.300'}} />)}
-                              </List>
-                          </Box>
-                           <Button 
-                            variant="contained" 
-                            size="small" 
-                            color="info" 
-                            startIcon={<DeliveryDiningIcon />} 
-                            onClick={() => handleMarkAsDelivered(order._id)} 
-                            fullWidth 
-                           > 
-                            Marcar Entregue 
-                           </Button>
+                        <ListItem key={order._id} sx={{ bgcolor: 'grey.800', mb: 1, borderRadius: 1, flexDirection: 'column', alignItems: 'flex-start', p: 1 }}>
+                             <Typography variant="subtitle2" sx={{color: 'white'}}>{order.clientName} <span style={{color:'#aaa'}}>#{order._id.slice(-4)}</span></Typography>
+                             <List disablePadding sx={{pl: 0, width: '100%'}}>
+                                 {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name} (x${item.quantity})`} sx={{m:0}} primaryTypographyProps={{fontSize: '0.8rem', color: 'grey.300'}} />)}
+                             </List>
+                             <Button variant="contained" size="small" color="info" startIcon={<DeliveryDiningIcon />} onClick={() => handleMarkAsDelivered(order._id)} fullWidth sx={{mt: 1}}> Entregue </Button>
                         </ListItem>
                       ))}
                     </List>
@@ -457,15 +307,86 @@ function Order() {
                 </Box>
             )}
         </Box>
-      </Paper>
-      {/* Modal de Customização (AINDA NÃO REFATORADO) */}
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedItem}
-        onAddToCart={handleAddToCart}
-      />
-    </Box> 
+    </Paper>
+  );
+  const cartButton = (
+    <IconButton color="inherit" onClick={handleDrawerToggle} sx={{ ml: 1 }}>
+      <Badge badgeContent={currentOrder.length} color="secondary">
+        <ShoppingCartIcon />
+      </Badge>
+    </IconButton>
+  );
+ 
+  return (
+    <AppSidebar 
+        user={user} 
+        onLogout={handleLogout}
+        actionButton={cartButton} 
+        hideDesktopAction={true}
+    >
+      <Box sx={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
+        
+        {/* === COLUNA CENTRAL (PRODUTOS) === */}
+        <Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: '#f4f6f8' }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Tabs value={menuType} onChange={(event, newValue) => setMenuType(newValue)} aria-label="menu tabs" variant="fullWidth" textColor="primary" indicatorColor="primary">
+                <Tab label="Almoço" value="allDay" icon={<FastfoodIcon />} iconPosition="start" />
+                <Tab label="Café" value="breakfast" icon={<CoffeeIcon />} iconPosition="start" />
+            </Tabs>
+            </Box>
+            
+            {loadingMenu ? ( <Typography sx={{ textAlign: 'center', mt: 4 }}>Carregando...</Typography> ) : (
+            <Box 
+                sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                '@media (min-width: 1536px)': { gridTemplateColumns: 'repeat(5, 1fr)' }, 
+                '@media (min-width: 1200px) and (max-width: 1535px)': { gridTemplateColumns: 'repeat(4, 1fr)' },
+                gap: 2,
+                }}
+            >
+                {menuToDisplay.map(item => (
+                <Card key={item._id} sx={{ height: '280px', display: 'flex', flexDirection: 'column', borderRadius: 2, boxShadow: 2, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
+                    <CardActionArea onClick={() => handleAddItem(item)} sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: '100%' }}>
+                    <Box sx={{ height: 130, width: '100%', p: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        <CardMedia component="img" sx={{ maxHeight: '100%', width: 'auto', maxWidth: '100%', objectFit: 'contain', borderRadius: 2 }} image={item.imageUrl || 'https://via.placeholder.com/200x130?text=Sem+Imagem'} alt={item.name} />
+                    </Box>
+                    <CardContent sx={{ width: '100%', textAlign: 'center', p: 1, pt: 0.5, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <Typography variant="subtitle2" component="div" sx={{ fontWeight: 600, lineHeight: 1.3, height: '3em', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', mb: 0.5, wordBreak: 'break-word', textAlign: 'center' }}>
+                        {item.name}
+                        </Typography>
+                        <Typography variant="body1" color="primary.main" sx={{ fontWeight: 'bold', mt:'auto', flexShrink: 0 }}>
+                        R$ {item.price.toFixed(2)}
+                        </Typography>
+                    </CardContent>
+                    </CardActionArea>
+                </Card>
+                ))}
+            </Box>
+            )}
+        </Box>
+
+        {/* === COLUNA DIREITA (SIDEBAR - Apenas Desktop) === */}
+        <Box sx={{ display: { xs: 'none', md: 'block' }, width: 360, flexShrink: 0 }}> 
+            {OrderSummaryContent}
+        </Box>
+
+      </Box>
+
+      {/* === DRAWER (CARRINHO - Apenas Mobile) === */}
+      <Drawer
+        anchor="right"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 320, bgcolor: '#303030' } }}
+      >
+        {OrderSummaryContent}
+      </Drawer>
+
+      {/* Modal de Customização */}
+      <ProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} product={selectedItem} onAddToCart={handleAddToCart} />
+    
+    </AppSidebar>
   );
 }
 

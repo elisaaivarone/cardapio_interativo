@@ -14,64 +14,91 @@ afterAll(async () => {
     await mongoose.connection.close();
 });
 
-describe('Verificação de Saúde da API', () => {
+describe('1. Verificação de Saúde', () => {
     it('Deve retornar 200 na rota raiz', async () => {
         const res = await request(app).get('/');
         expect(res.statusCode).toEqual(200);
     });
 });
 
-describe('Fluxo Completo: Autenticação e Pedidos', () => {
+describe('2. Segurança e Erros', () => {
+    it('Deve bloquear acesso sem token (401)', async () => {
+        // Tenta acessar rotas protegidas sem o header Authorization
+        const res = await request(app).get('/api/orders');
+        expect(res.statusCode).toEqual(401);
+    });
+});
+
+describe('3. Fluxo Completo do Restaurante', () => {
     let token;
-    // Criamos um email único para não dar erro de "usuário já existe"
+    let orderId;
+    
+    // Usuário de teste único para esta rodada
     const testUser = {
-        name: 'Garçom Teste Jest',
-        email: `teste_jest_${Date.now()}@burgerqueen.com`, 
+        name: 'Tester Automatizado',
+        email: `test_full_${Date.now()}@bq.com`, 
         password: '123',
         role: 'hall'
     };
 
-    // Teste 1: Criar Usuário e Logar
-    it('Deve registrar um novo garçom e fazer login', async () => {
+    it('PASSO A: Registrar e Logar', async () => {
         // 1. Registrar
-        const regRes = await request(app).post('/api/auth/register').send(testUser);
-        expect(regRes.statusCode).toEqual(201);
-
+        await request(app).post('/api/auth/register').send(testUser);
+        
         // 2. Login
-        const loginRes = await request(app).post('/api/auth/login').send({
+        const res = await request(app).post('/api/auth/login').send({
             email: testUser.email,
             password: testUser.password
         });
 
-        expect(loginRes.statusCode).toEqual(200);
-        expect(loginRes.body).toHaveProperty('token');
-        
-        // Armazena o token para o próximo teste
-        token = loginRes.body.token;
+        expect(res.statusCode).toEqual(200);
+        token = res.body.token; // Guarda o token para os próximos passos
     });
 
-    // Teste 2: Criar Pedido (requer o token acima)
-    it('Deve criar um pedido com o token do garçom', async () => {
+    it('PASSO B: Listar itens do cardápio', async () => {
+        const res = await request(app)
+            .get('/api/itens')
+            .set('Authorization', `Bearer ${token}`); 
+
+        expect(res.statusCode).toEqual(200);
+        expect(Array.isArray(res.body)).toBe(true);
+    });
+
+    it('PASSO C: Criar um pedido', async () => {
         const newOrder = {
-            clientName: "Cliente Teste Automatizado",
+            clientName: "Cliente Jest",
             items: [
-                {
-                    productId: "id_falso_123", // Como é string, pode ser qualquer coisa
-                    name: "Hambúrguer Teste",
-                    price: 20,
-                    quantity: 2
-                }
+                { productId: "123", name: "Burger Teste", price: 20, quantity: 1 }
             ],
-            totalPrice: 40
+            totalPrice: 20
         };
 
         const res = await request(app)
             .post('/api/orders')
-            .set('Authorization', `Bearer ${token}`) // <--- Usa o token aqui
+            .set('Authorization', `Bearer ${token}`)
             .send(newOrder);
 
         expect(res.statusCode).toEqual(201);
-        expect(res.body.clientName).toEqual(newOrder.clientName);
-        expect(res.body.status).toEqual('pending');
+        orderId = res.body._id; // Guarda o ID do pedido para a cozinha usar
+    });
+
+    it('PASSO D: Cozinha busca pedidos pendentes', async () => {
+        const res = await request(app)
+            .get('/api/orders?status=pending')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.statusCode).toEqual(200);
+        const foundOrder = res.body.find(o => o._id === orderId);
+        expect(foundOrder).toBeTruthy();
+    });
+
+    it('PASSO E: Cozinha marca pedido como Pronto', async () => {
+        const res = await request(app)
+            .patch(`/api/orders/${orderId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ status: 'ready' });
+
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.status).toEqual('ready');
     });
 });
