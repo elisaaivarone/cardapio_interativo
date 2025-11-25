@@ -11,22 +11,31 @@ const OrderItemSchema = new mongoose.Schema({
 const OrderSchema = new mongoose.Schema({
     clientName: { type: String, required: true },
 
-    // Referência ao garçom que fez o pedido
     waiterId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Referência ao modelo User
+        ref: 'User', 
         required: true,
     },
     items: [OrderItemSchema],
     status: {
         type: String,
         required: true,
-        enum: ['pending', 'ready', 'delivered' ],
+        enum: ['pending', 'ready', 'delivered', 'paid' ],
         default: 'pending',
     },
 
     totalPrice: { type: Number, required: true },
-}, { timestamps: true // Adiciona campos createdAt e updatedAt automaticamente
+
+    paymentMethod: { 
+    type: String, 
+    enum: ['credit', 'debit', 'cash', 'pix', null], 
+    default: null 
+    },
+    amountPaid: { type: Number, default: 0 }, // Quanto o cliente deu (para calcular troco)
+    change: { type: Number, default: 0 }, // Troco
+    paidAt: { type: Date }
+
+}, { timestamps: true 
 });
 
 const Order = mongoose.model('Order', OrderSchema);
