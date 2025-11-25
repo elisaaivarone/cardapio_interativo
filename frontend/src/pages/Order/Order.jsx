@@ -34,9 +34,11 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CloseIcon from '@mui/icons-material/Close';
 // Serviços e Componentes
-import { getItems, createOrder, getOrders, updateOrderStatus } from '../../services/api';
+import { getItems, createOrder, getOrders, updateOrderStatus, processPayment } from '../../services/api';
 import ProductModal from '../../components/ProductModal/ProductModal';
-import AppSidebar from '../../components/AppSidebar/AppSidebar'; 
+import AppSidebar from '../../components/AppSidebar/AppSidebar';
+import PaymentModal from '../../components/PaymentModal/PaymentModal';
+import PaidIcon from '@mui/icons-material/Paid'; 
 
 function Order() {
   const navigate = useNavigate();
@@ -58,6 +60,9 @@ function Order() {
   
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [orderToPay, setOrderToPay] = useState(null);
 
 
   // Busca Menus
@@ -82,26 +87,23 @@ function Order() {
   }, []);
 
   // Busca Pedidos Prontos
-  useEffect(() => {
+ useEffect(() => {
     const fetchReadyOrders = async () => {
        try {
-        setLoadingReadyOrders(true);
-        setErrorReadyOrders('');
-        const orders = await getOrders('ready');
+        setLoadingReadyOrders(true); const orders = await getOrders('ready,delivered');
         setReadyOrders(orders);
+        setErrorReadyOrders('');
       } catch (error) {
-        console.error("Erro ao buscar pedidos prontos:", error);
-        setErrorReadyOrders('Erro ao carregar pedidos prontos.');
-      } finally {
-        setLoadingReadyOrders(false);
+        console.error("Erro ao buscar pedidos prontos em segundo plano:", error);
       }
     };
-    if (activeTab === 'ready') {
-        fetchReadyOrders();
-        const intervalId = setInterval(fetchReadyOrders, 30000);
-        return () => clearInterval(intervalId);
-    }
-  }, [activeTab]);
+
+    fetchReadyOrders();
+
+    const intervalId = setInterval(fetchReadyOrders, 10000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Busca Usuário
   useEffect(() => {
@@ -199,6 +201,24 @@ function Order() {
       }
   };
 
+  // Abre Modal de Pagamento
+  const handleOpenPayment = (order) => {
+  setOrderToPay(order);
+  setIsPaymentModalOpen(true);
+};
+
+const handleConfirmPayment = async (orderId, paymentData) => {
+  try {
+    await processPayment(orderId, paymentData);
+    toast.success('Pagamento registrado com sucesso!');
+   
+    setReadyOrders(prev => prev.filter(o => o._id !== orderId));
+  } catch (error) {
+    console.error(error);
+    toast.error('Erro ao processar pagamento.');
+  }
+};
+
   const menuToDisplay = menuType === 'breakfast' ? breakfastItems : allDayItems;
   const total = currentOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -223,7 +243,15 @@ function Order() {
         <Box sx={{ borderBottom: 1, borderColor: 'grey.700', mb: 2, mx: 2, flexShrink: 0 }}>
             <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} textColor="primary" indicatorColor="primary" variant="fullWidth" >
                 <Tab label="Pedido Atual" value="current" icon={<ReceiptLongIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.light' }}}/>
-                <Tab label={`Prontos (${readyOrders.length})`} value="ready" icon={<CheckCircleOutlineIcon />} iconPosition="start" sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.light' }}}/>
+                <Tab label={
+                  <Badge badgeContent={readyOrders.filter(o => o.status === 'ready').length} color="error">
+                    <span style={{ paddingRight: '8px' }}>Prontos</span>
+                  </Badge>
+                } 
+                value="ready" 
+                icon={<CheckCircleOutlineIcon />} 
+                iconPosition="start" 
+                sx={{minWidth: '50%', color:'white', '&.Mui-selected': { color: 'primary.main' }}}/>
             </Tabs>
         </Box>
 
@@ -299,7 +327,31 @@ function Order() {
                              <List disablePadding sx={{pl: 0, width: '100%'}}>
                                  {order.items.map((item, idx) => <ListItemText key={idx} primary={`- ${item.name} (x${item.quantity})`} sx={{m:0}} primaryTypographyProps={{fontSize: '0.8rem', color: 'grey.300'}} />)}
                              </List>
-                             <Button variant="contained" size="small" color="info" startIcon={<DeliveryDiningIcon />} onClick={() => handleMarkAsDelivered(order._id)} fullWidth sx={{mt: 1}}> Entregue </Button>
+                             <Box sx={{ display: 'flex', gap: 1, width: '100%', mt: 1 }}>
+                                {/* Botão Entregue */}
+                                <Button 
+                                    variant={order.status === 'delivered' ? "text" : "outlined"}
+                                    size="small" 
+                                    color="info" 
+                                    disabled={order.status === 'delivered'}
+                                    onClick={() => handleMarkAsDelivered(order._id)} 
+                                    sx={{ flex: 1 }}
+                                > 
+                                    Entregue 
+                                </Button>
+                                
+                                {/* BOTÃO PAGAR */}
+                                <Button 
+                                    variant="contained" 
+                                    size="small" 
+                                    color="success"
+                                    startIcon={<PaidIcon />}
+                                    onClick={() => handleOpenPayment(order)} 
+                                    sx={{ flex: 1 }}
+                                > 
+                                    Pagar 
+                                </Button>
+                             </Box>
                         </ListItem>
                       ))}
                     </List>
@@ -385,7 +437,14 @@ function Order() {
 
       {/* Modal de Customização */}
       <ProductModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} product={selectedItem} onAddToCart={handleAddToCart} />
-    
+      
+      {/* Modal de Pagamento */}
+      <PaymentModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        order={orderToPay}
+        onConfirmPayment={handleConfirmPayment}
+      />
     </AppSidebar>
   );
 }
