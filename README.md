@@ -33,6 +33,11 @@
       * Botão "Enviar para Cozinha" que posta o pedido na API.
       * Aba "Pedidos Prontos" que busca (`GET /api/orders?status=ready`) e exibe pedidos prontos para entrega.
     * **Modal de Customização:** Abre um pop-up para customizar itens (ex: tipo de hambúrguer, extras).
+    * * **Sistema de Pagamento:**
+        * Modal dedicado para finalizar pedidos.
+        * Suporte a múltiplos métodos: Crédito, Débito, PIX e Dinheiro.
+        * Cálculo automático de troco para pagamentos em dinheiro.
+        * Atualização de status para "Pago" e arquivamento do pedido.
 * **Painel da Cozinha (`/kitchen`):**
   * Visualização em tempo real dos pedidos pendentes, ordenados por chegada.
   * Exibição do tempo decorrido desde a criação do pedido.
