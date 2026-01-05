@@ -134,3 +134,31 @@ export const processPayment = async (orderId, paymentData) => {
     throw error.response.data;
   }
 };
+
+// --- ROTAS DO CAIXA (FINANCEIRO) ---
+
+export const getCashierStatus = async () => {
+  const response = await api.get('/cashier/status');
+  return response.data;
+};
+
+export const openCashier = async (initialBalance) => {
+  const response = await api.post('/cashier/open', { initialBalance });
+  return response.data;
+};
+
+export const closeCashier = async (finalBalanceDeclared) => {
+  const response = await api.post('/cashier/close', { finalBalanceDeclared });
+  return response.data;
+};
+
+export const addTransaction = async (type, description, value) => {
+  // type: 'supply' (suprimento) ou 'bleed' (sangria)
+  const response = await api.post('/cashier/transaction', { type, description, value });
+  return response.data;
+};
+
+export const getTransactions = async () => {
+  const response = await api.get('/cashier/transactions');
+  return response.data;
+};

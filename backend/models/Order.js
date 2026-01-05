@@ -9,7 +9,19 @@ const OrderItemSchema = new mongoose.Schema({
 });
 
 const OrderSchema = new mongoose.Schema({
-    clientName: { type: String, required: true },
+    orderType: {
+    type: String,
+    enum: ['dineIn', 'delivery'], // dineIn = Comer no local, delivery = Entrega/Viagem
+    default: 'dineIn',
+    required: true
+  },
+  
+    tableNumber: {
+    type: String, 
+    default: '' 
+  },
+
+    clientName: { type: String, default: '' },
 
     waiterId: {
         type: mongoose.Schema.Types.ObjectId,

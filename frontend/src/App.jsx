@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Order from './pages/Order/Order';
 import Kitchen from './pages/Kitchen/Kitchen';
 import ProtectedRoute from './components/ProtectedRoute';
+import Cashier from './pages/Cashier/Cashier';
 
 
 function App() {
@@ -34,6 +35,9 @@ function App() {
             <Route path="/kitchen" element={<ProtectedRoute role="kitchen"><Kitchen /></ProtectedRoute>} />
 
             <Route path="*" element={<Navigate to="/login" />} />
+            
+          {/* Rota do Caixa */}
+          <Route path="/financeiro" element={<ProtectedRoute><Cashier /></ProtectedRoute>} />
         </Routes>
 
         {/* Configuração do ToastContainer para notificações */}

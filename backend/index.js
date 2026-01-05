@@ -6,6 +6,8 @@ const itemRoutes = require('./routes/items');
 const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orders');
 const authMiddleware = require('./middleware/authMiddleware');
+// ROTAS DE CAIXA
+const cashierRoutes = require('./routes/cashier');
 
 require('dotenv').config();
 
@@ -24,7 +26,7 @@ mongoose.connect(process.env.DATABASE_URL)
 app.use('/api/auth', authRoutes);
 app.use('/api/itens', authMiddleware, itemRoutes);
 app.use('/api/orders', authMiddleware, orderRoutes);
-
+app.use('/api/cashier', authMiddleware, cashierRoutes);
 
 app.get('/', (request, response) => {
   response.send('Olá! Meu primeiro servidor está no ar! 🎉');
