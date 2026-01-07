@@ -28,8 +28,8 @@ const theme = createTheme({
         main: '#dc3545', 
     },
     background: {
-       default: '#f4f6f8', // Cor de fundo padrão da página
-       paper: '#ffffff',   // Cor de fundo de componentes como Card, Paper
+       default: '#f4f6f8', 
+       paper: '#ffffff',   
        rightMenu: '#4C4A55',
      }
   },

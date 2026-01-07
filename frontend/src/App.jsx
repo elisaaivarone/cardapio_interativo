@@ -32,12 +32,15 @@ function App() {
           <Route path="/order" element={<ProtectedRoute role="hall"><Order /></ProtectedRoute>} />
 
           {/* Rota da Cozinha */}
-            <Route path="/kitchen" element={<ProtectedRoute role="kitchen"><Kitchen /></ProtectedRoute>} />
+          <Route path="/kitchen" element={<ProtectedRoute role="kitchen"><Kitchen /></ProtectedRoute>} />
 
-            <Route path="*" element={<Navigate to="/login" />} />
-            
           {/* Rota do Caixa */}
-          <Route path="/financeiro" element={<ProtectedRoute><Cashier /></ProtectedRoute>} />
+          <Route path="/financeiro" element={<ProtectedRoute role="admin"><Cashier /></ProtectedRoute>} />
+
+          {/* Rota Padrão (Redirecionar) */}
+          <Route path="*" element={<Navigate to="/login" />} />
+            
+          
         </Routes>
 
         {/* Configuração do ToastContainer para notificações */}

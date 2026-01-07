@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { jwtDecode } from 'jwt-decode';
 // MUI Components
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -11,10 +13,12 @@ import CardActions from '@mui/material/CardActions';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import Divider from '@mui/material/Divider';
 // Ícones
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FastfoodIcon from '@mui/icons-material/Fastfood';
 // Serviços e Componentes
 import { getItems, createItem, deleteItem, updateItem } from "../../services/api.js";
 import ItemModal from "../../components/ItemModal/ItemModal";
@@ -28,29 +32,36 @@ function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
     try {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      setUser(userData);
-    } catch (e) { console.error(e); }
-  }, []);
+      const decoded = jwtDecode(token);
+      setUser(decoded.user); // Pega dados do usuário para o Sidebar
+      fetchItems();
+    } catch (error) {
+      console.error("Erro detalhado:", error);
+      navigate('/login');
+    }
+  }, [navigate]);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        const data = await getItems();
-        setItems(data);
-      } catch (error) {
-        console.error("Erro detalhado:", error);
-        setError('Erro ao buscar itens.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
+  const fetchItems = async () => {
+    try {
+      const data = await getItems();
+      setItems(data);
+    } catch (error) {
+      console.error("Erro detalhado:", error);
+      setError('Falha ao carregar itens.');
+      toast.error('Erro ao carregar itens.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- Handlers ---
   const handleEdit = (item) => { 
@@ -86,47 +97,56 @@ function Dashboard() {
     }
   };
 
-  const executeDelete = async (id) => {
+  const handleDelete = async (id) => {
+    if (window.confirm('Tem certeza que deseja excluir este item?')) {
       try {
         await deleteItem(id);
-        setItems(items.filter(item => item._id !== id));
-        toast.success('Deletado!');
+        toast.success('Item excluído!');
+        fetchItems();
       } catch (error) {
-        console.error("Erro detalhado:", error);
-        toast.error('Erro ao deletar');
+        console.error(error);
+        toast.error('Erro ao excluir item.');
       }
+    }
   };
 
   const handleDeleteConfirmation = (id) => {
     toast(({ closeToast }) => (
-        <ConfirmToast closeToast={closeToast} onConfirm={() => executeDelete(id)} message="Tem certeza?" />
+        <ConfirmToast closeToast={closeToast} onConfirm={() => handleDelete(id)} message="Tem certeza?" />
     ), { position: "top-center", autoClose: false, closeOnClick: false });
   };
 
-  const addButton = (
-    <Button 
-      variant="contained" 
-      color="secondary" 
-      startIcon={<AddIcon />} 
-      onClick={handleAddNew}
-      fullWidth
-      sx={{ fontWeight: 'bold' }}
-    >
-      Adicionar Item
-    </Button>
-  );
-
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
   if (loading) return 
     <Box sx={{display:'flex', height:'100vh', justifyContent:'center', alignItems:'center'}}>
       <CircularProgress/>
     </Box>;
 
   return (
-    <AppSidebar user={user} actionButton={addButton}>
+    <AppSidebar user={user} onLogout={handleLogout}>
       
-      <Typography variant="h5" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.contrastText', mb: 3 }}>
-        Dashboard
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FastfoodIcon fontSize="large" color="primary" />
+          Produtos
+        </Typography>
+
+        <Button 
+          variant="contained" 
+          color="success" 
+          startIcon={<AddIcon />} 
+          onClick={handleAddNew}
+          sx={{ fontWeight: 'bold', px: 3 }}
+        >
+          Adicionar Novo Item
+        </Button>
+      </Box>
+      
+      <Divider sx={{ mb: 4 }} />
       
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -166,7 +186,7 @@ function Dashboard() {
                       <Chip 
                         label={item.category} 
                         size="small" 
-                        color={item.menu === 'breakfast' ? 'warning' : 'default'}
+                        color="default"
                         variant="outlined"
                       />
                   </Box>

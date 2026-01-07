@@ -1,245 +1,363 @@
-import { useState, useEffect } from 'react';
+// src/pages/Cashier/Cashier.jsx
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import {
-  Box, Typography, Button, TextField, Grid, Card, CardContent, Divider,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  List, ListItem, ListItemText, ListItemIcon
+  Box, Typography, Button, TextField, Paper, Divider, 
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Tabs, Tab, Chip, CircularProgress, Card, CardContent, Grid
 } from '@mui/material';
+
+// Bibliotecas Externas
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Ícones
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import PixIcon from '@mui/icons-material/QrCode';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import LockIcon from '@mui/icons-material/Lock';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
 import AppSidebar from '../../components/AppSidebar/AppSidebar';
-import { getCashierStatus, openCashier, closeCashier, addTransaction, getTransactions } from '../../services/api';
+import { getCashierStatus, openCashier, closeCashier, getOrders } from '../../services/api';
 
-const StatCard = ({ title, value, color, icon }) => (
-  <Card sx={{ height: '100%', borderLeft: `5px solid ${color}`, boxShadow: 2 }}>
-    <CardContent>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Box>
-            <Typography color="textSecondary" variant="caption" fontWeight="bold" textTransform="uppercase">{title}</Typography>
-            <Typography variant="h5" fontWeight="bold">R$ {value.toFixed(2)}</Typography>
-        </Box>
-        <Box sx={{ color: color, opacity: 0.8 }}>{icon}</Box>
-      </Box>
-    </CardContent>
-  </Card>
-);
+const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const Cashier = () => {
   const [loading, setLoading] = useState(true);
-  const [cashierData, setCashierData] = useState(null); 
-  const [transactions, setTransactions] = useState([]); 
   const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
 
-  // Estados de Input
-  const [initialBalance, setInitialBalance] = useState('');
-  const [finalBalance, setFinalBalance] = useState('');
+  const [cashierData, setCashierData] = useState(null);
+  const [todaysOrders, setTodaysOrders] = useState([]);
+  const [salesSummary, setSalesSummary] = useState({ credit: 0, debit: 0, pix: 0, cash: 0, total: 0 });
   
-  // Estados de Modais
-  const [isBleedModalOpen, setIsBleedModalOpen] = useState(false);
-  const [bleedValue, setBleedValue] = useState('');
-  const [bleedDesc, setBleedDesc] = useState('');
+  const [initialBalance, setInitialBalance] = useState('');
+  const [cashTroco, setCashTroco] = useState('');
+  const [cashRetirada, setCashRetirada] = useState('');
+  const [observations, setObservations] = useState('');
 
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    setUser(userData);
-    fetchStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Dados do gráfico
+  const chartData = useMemo(() => [
+    { name: 'Crédito', value: salesSummary.credit },
+    { name: 'Débito', value: salesSummary.debit },
+    { name: 'Pix', value: salesSummary.pix },
+    { name: 'Dinheiro', value: salesSummary.cash },
+  ].filter(item => item.value > 0), [salesSummary]);
+
+  const calculateSales = (orders) => {
+    const summary = { credit: 0, debit: 0, pix: 0, cash: 0, total: 0 };
+    orders.forEach(order => {
+      const val = order.totalPrice;
+      if (order.paymentMethod === 'credit') summary.credit += val;
+      if (order.paymentMethod === 'debit') summary.debit += val;
+      if (order.paymentMethod === 'pix') summary.pix += val;
+      if (order.paymentMethod === 'cash') summary.cash += val;
+      summary.total += val;
+    });
+    setSalesSummary(summary);
+  };
+
+  const fetchCashierStatus = useCallback(async () => {
+    try {
+      const status = await getCashierStatus();
+      if (status.isOpen) {
+        setCashierData(status.cashier);
+        const allOrders = await getOrders('paid'); 
+        const openTime = new Date(status.cashier.openedAt).getTime();
+        const currentSessionOrders = allOrders.filter(o => new Date(o.createdAt).getTime() >= openTime);
+        
+        setTodaysOrders(currentSessionOrders);
+        calculateSales(currentSessionOrders);
+      } else {
+        setCashierData(null);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    }
   }, []);
 
-  const fetchStatus = async () => {
-    try {
-      setLoading(true);
-      const status = await getCashierStatus();
-      setCashierData(status.isOpen ? status.cashier : null);
-      if (status.isOpen) fetchTransactions();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    try {
-        const data = await getTransactions();
-        setTransactions(data);
-    } catch (error) { 
-        console.error(error); }
-  };
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        setUser(userData);
+        await fetchCashierStatus();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, [fetchCashierStatus]);
 
   const handleOpenCashier = async () => {
     if (!initialBalance) return toast.warning('Informe o fundo de troco.');
     try {
       await openCashier(initialBalance);
-      toast.success('Caixa aberto com sucesso!');
-      fetchStatus();
+      toast.success('Caixa aberto!');
+      fetchCashierStatus();
     } catch (error) {
-        console.error(error);
-        toast.error('Erro ao abrir caixa.');
+      console.error(error);
+      toast.error('Erro ao abrir.');
     }
   };
 
   const handleCloseCashier = async () => {
-    if (!finalBalance) return toast.warning('Informe o valor final em gaveta.');
+    const totalCashNet = salesSummary.cash - (parseFloat(cashTroco)||0) - (parseFloat(cashRetirada)||0);
+    const finalBalanceCalc = cashierData.initialBalance + totalCashNet;
+
     try {
-      const result = await closeCashier(finalBalance);
-      toast.success(`Caixa fechado! Diferença: R$ ${result.summary.difference.toFixed(2)}`);
-      setCashierData(null); 
-      setTransactions([]);
+      await closeCashier(finalBalanceCalc);
+      toast.success('Caixa fechado com sucesso!');
+      setCashierData(null);
+      setTodaysOrders([]);
+      setCashTroco('');
+      setCashRetirada('');
+      setObservations('');
     } catch (error) {
-        console.error(error);
-        toast.error('Erro ao fechar caixa.');
+      console.error(error);
+      toast.error('Erro ao fechar.');
     }
   };
 
-  const handleTransaction = async (type) => {
-    if (!bleedValue || !bleedDesc) return toast.warning('Preencha valor e descrição.');
-    try {
-        await addTransaction(type, bleedDesc, bleedValue);
-        toast.success(type === 'bleed' ? 'Sangria realizada!' : 'Suprimento realizado!');
-        setIsBleedModalOpen(false);
-        setBleedValue('');
-        setBleedDesc('');
-        fetchTransactions(); 
-    } catch (error) {
-        console.error(error);
-        toast.error('Erro ao registrar transação.');
-    }
+  const getNetTotal = (systemValue, troco = 0, retirada = 0) => {
+    return systemValue - troco - retirada;
   };
 
-  // --- RENDERIZAÇÃO ---
+  const totalGeral = 
+    salesSummary.credit + 
+    salesSummary.debit + 
+    salesSummary.pix + 
+    getNetTotal(salesSummary.cash, parseFloat(cashTroco)||0, parseFloat(cashRetirada)||0);
 
-  if (loading) return <Typography sx={{p:4}}>Carregando financeiro...</Typography>;
+  if (loading) return <Box sx={{display:'flex', justifyContent:'center', mt:10}}><CircularProgress /></Box>;
 
-  return (
-    <AppSidebar user={user} onLogout={() => {localStorage.clear(); window.location.href='/login'}}>
-      <Box sx={{ p: 3, maxWidth: '1200px', margin: '0 auto' }}>
-        
-        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <PointOfSaleIcon fontSize="large" color="primary"/> 
-            Gestão Financeira
-            {cashierData && <Typography variant="subtitle1" sx={{bgcolor:'success.light', color:'success.contrastText', px:1, borderRadius:1}}>CAIXA ABERTO</Typography>}
-        </Typography>
-        
-        <Divider sx={{ mb: 4 }} />
-
-        {/* --- CENÁRIO 1: CAIXA FECHADO --- */}
-        {!cashierData ? (
-          <Card sx={{ maxWidth: 500, mx: 'auto', mt: 4, p: 2, textAlign: 'center' }}>
-            <CardContent>
-                <LockIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                <Typography variant="h5" gutterBottom>O Caixa está Fechado</Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                    Para começar as vendas do dia, informe o valor que está na gaveta (Fundo de Troco).
-                </Typography>
-                
+  // --- TELA DE ABERTURA ---
+  if (!cashierData) {
+    return (
+      <AppSidebar user={user}>
+          <Box sx={{ maxWidth: 400, mx: 'auto', mt: 10, textAlign: 'center' }}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+                <LockIcon sx={{ fontSize: 50, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="h5" fontWeight="bold" gutterBottom>Caixa Fechado</Typography>
                 <TextField 
-                    label="Fundo de Troco (R$)" 
-                    type="number" 
-                    fullWidth 
-                    value={initialBalance}
-                    onChange={(e) => setInitialBalance(e.target.value)}
+                    label="Fundo de Troco (R$)" type="number" fullWidth variant="outlined"
+                    value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)}
                     sx={{ mb: 3, mt: 2 }}
                 />
-                
-                <Button variant="contained" size="large" fullWidth onClick={handleOpenCashier}>
+                <Button variant="contained" color="primary" size="large" fullWidth onClick={handleOpenCashier}>
                     ABRIR CAIXA
                 </Button>
-            </CardContent>
-          </Card>
-        ) : (
+            </Paper>
+          </Box>
+      </AppSidebar>
+    );
+  }
+
+  // --- TELA PRINCIPAL ---
+  return (
+    <AppSidebar user={user} onLogout={() => {localStorage.clear(); window.location.href='/login'}}>
+      <Box sx={{ p: 3, bgcolor: '#f4f6f8', minHeight: '100vh' }}>
         
-        /* --- CENÁRIO 2: CAIXA ABERTO (DASHBOARD) --- */
-          <Grid container spacing={3}>
-             {/* Note: Aqui você mostraria dados em tempo real. Como o backend calcula o total no /close, 
-                 para mostrar em tempo real precisaríamos de uma rota /dashboard-info ou calcular no front com base nas orders. 
-                 Por simplicidade, vamos focar nas ações operacionais agora. */}
-             
-             <Grid item xs={12}>
-                 <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                    <Button variant="outlined" color="error" startIcon={<TrendingDownIcon/>} onClick={() => setIsBleedModalOpen(true)}>
-                        Realizar Sangria
-                    </Button>
-                    <Button variant="outlined" color="success" startIcon={<TrendingUpIcon/>} onClick={() => {/* Lógica Suprimento */}}>
-                        Suprimento
-                    </Button>
-                 </Box>
-             </Grid>
+        {/* Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+             <Box>
+                <Typography variant="h4" fontWeight="bold" sx={{color:'#333'}}>Financeiro</Typography>
+                <Chip label="Caixa Aberto" color="success" size="small" icon={<PointOfSaleIcon/>} sx={{mt:0.5}} />
+             </Box>
+        </Box>
 
-             {/* Histórico de Transações do Dia */}
-             <Grid item xs={12} md={8}>
-                <Card>
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>Movimentações de Gaveta</Typography>
-                        {transactions.length === 0 ? <Typography variant="body2" color="text.secondary">Nenhuma movimentação extra hoje.</Typography> : (
-                            <List>
-                                {transactions.map(t => (
-                                    <ListItem key={t._id} divider>
-                                        <ListItemIcon>
-                                            {t.type === 'bleed' ? <TrendingDownIcon color="error"/> : <TrendingUpIcon color="success"/>}
-                                        </ListItemIcon>
-                                        <ListItemText 
-                                            primary={t.type === 'bleed' ? 'Sangria (Saída)' : 'Suprimento (Entrada)'} 
-                                            secondary={`${t.description} - ${new Date(t.date).toLocaleTimeString()}`} 
+        {/* Abas */}
+        <Paper sx={{ mb: 3, borderRadius: 2 }}>
+            <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} indicatorColor="primary" textColor="primary">
+                <Tab label="Fechamento de Caixa" sx={{ textTransform: 'none', fontWeight: 'bold' }} />
+                <Tab label="Entradas de Hoje" sx={{ textTransform: 'none', fontWeight: 'bold' }} />
+            </Tabs>
+        </Paper>
+
+        {activeTab === 0 && (
+            <Box>
+                {/* 1. SEÇÃO DE CARDS (TOPO) - FULL WIDTH */}
+                <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                    <Card sx={{ flex: 1, minWidth: 250, boxShadow: 1 }}>
+                        <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" fontWeight="bold">ABERTURA (FUNDO)</Typography>
+                                <Typography variant="h5" fontWeight="bold">R$ {cashierData.initialBalance.toFixed(2)}</Typography>
+                            </Box>
+                            <LockIcon sx={{ color: 'text.secondary', opacity: 0.3, fontSize: 40 }} />
+                        </CardContent>
+                    </Card>
+                    <Card sx={{ flex: 1, minWidth: 250, boxShadow: 1 }}>
+                        <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" fontWeight="bold">VENDAS TOTAIS</Typography>
+                                <Typography variant="h5" fontWeight="bold" color="primary.main">R$ {salesSummary.total.toFixed(2)}</Typography>
+                            </Box>
+                            <MonetizationOnIcon sx={{ color: 'primary.main', opacity: 0.3, fontSize: 40 }} />
+                        </CardContent>
+                    </Card>
+                </Box>
+
+                {/* 2. SEÇÃO DA TABELA (MEIO) - DESTAQUE TOTAL */}
+                <Paper sx={{ p: 3, borderRadius: 2, mb: 3, boxShadow: 2 }}>
+                    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Conferência de Valores</Typography>
+                    <TableContainer>
+                        <Table sx={{ minWidth: 650 }}>
+                            <TableHead sx={{ bgcolor: '#f1f1f1' }}>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Forma de Pagamento</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Pago (Sistema)</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Troco</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Retirada / Devolução</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Total Líquido</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {/* Cartão de Crédito */}
+                                <TableRow>
+                                    <TableCell sx={{ py: 2 }}>Cartão de Crédito</TableCell>
+                                    <TableCell align="center" sx={{ py: 2 }}>R$ {salesSummary.credit.toFixed(2)}</TableCell>
+                                    <TableCell align="center" sx={{ color: 'text.disabled' }}>-</TableCell>
+                                    <TableCell align="center" sx={{ color: 'text.disabled' }}>-</TableCell>
+                                    <TableCell align="right" fontWeight="bold" sx={{ fontSize: '1rem' }}>R$ {salesSummary.credit.toFixed(2)}</TableCell>
+                                </TableRow>
+
+                                {/* Cartão de Débito */}
+                                <TableRow>
+                                    <TableCell sx={{ py: 2 }}>Cartão de Débito</TableCell>
+                                    <TableCell align="center" sx={{ py: 2 }}>R$ {salesSummary.debit.toFixed(2)}</TableCell>
+                                    <TableCell align="center" sx={{ color: 'text.disabled' }}>-</TableCell>
+                                    <TableCell align="center" sx={{ color: 'text.disabled' }}>-</TableCell>
+                                    <TableCell align="right" fontWeight="bold" sx={{ fontSize: '1rem' }}>R$ {salesSummary.debit.toFixed(2)}</TableCell>
+                                </TableRow>
+
+                                {/* Pix */}
+                                <TableRow>
+                                    <TableCell sx={{ py: 2 }}>Pix</TableCell>
+                                    <TableCell align="center" sx={{ py: 2 }}>R$ {salesSummary.pix.toFixed(2)}</TableCell>
+                                    <TableCell align="center" sx={{ color: 'text.disabled' }}>-</TableCell>
+                                    <TableCell align="center" sx={{ color: 'text.disabled' }}>-</TableCell>
+                                    <TableCell align="right" fontWeight="bold" sx={{ fontSize: '1rem' }}>R$ {salesSummary.pix.toFixed(2)}</TableCell>
+                                </TableRow>
+
+                                {/* Dinheiro (Destaque) */}
+                                <TableRow sx={{ bgcolor: '#fffde7' }}>
+                                    <TableCell sx={{ py: 2 }}><strong>Dinheiro</strong></TableCell>
+                                    <TableCell align="center" sx={{ py: 2 }}>
+                                        <strong>R$ {salesSummary.cash.toFixed(2)}</strong>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <TextField 
+                                            size="small" type="number" placeholder="R$ 0.00" 
+                                            value={cashTroco} onChange={e => setCashTroco(e.target.value)}
+                                            sx={{ bgcolor: 'white', width: 140 }}
                                         />
-                                        <Typography fontWeight="bold" color={t.type === 'bleed' ? 'error.main' : 'success.main'}>
-                                            R$ {t.value.toFixed(2)}
-                                        </Typography>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                    </CardContent>
-                </Card>
-             </Grid>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <TextField 
+                                            size="small" type="number" placeholder="R$ 0.00" 
+                                            value={cashRetirada} onChange={e => setCashRetirada(e.target.value)}
+                                            sx={{ bgcolor: 'white', width: 140 }}
+                                        />
+                                    </TableCell>
+                                    <TableCell align="right" fontWeight="bold" sx={{ fontSize: '1.1rem', color: 'primary.main' }}>
+                                        R$ {getNetTotal(salesSummary.cash, parseFloat(cashTroco)||0, parseFloat(cashRetirada)||0).toFixed(2)}
+                                    </TableCell>
+                                </TableRow>
+                                
+                                {/* Total Geral */}
+                                <TableRow sx={{ bgcolor: '#e0e0e0', borderTop: '2px solid #bdbdbd' }}>
+                                    <TableCell sx={{ py: 3, fontSize: '1.2rem' }}><strong>TOTAL GERAL</strong></TableCell>
+                                    <TableCell align="center" colSpan={3}></TableCell>
+                                    <TableCell align="right">
+                                        <Chip label={`R$ ${totalGeral.toFixed(2)}`} color="success" sx={{ fontWeight: 'bold', fontSize: '1.2rem', height: 40, px: 2 }} />
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Paper>
 
-             {/* Área de Fechamento */}
-             <Grid item xs={12} md={4}>
-                <Card sx={{ bgcolor: 'grey.100' }}>
-                    <CardContent>
-                        <Typography variant="h6" gutterBottom>Fechar o Dia</Typography>
-                        <Typography variant="body2" paragraph>
-                            Conte o dinheiro físico na gaveta e informe abaixo para conferência.
-                        </Typography>
-                        <TextField 
-                            label="Valor na Gaveta (R$)" 
-                            type="number" 
-                            fullWidth 
-                            value={finalBalance}
-                            onChange={(e) => setFinalBalance(e.target.value)}
-                            sx={{ mb: 2, bgcolor: 'white' }}
-                        />
-                        <Button variant="contained" color="error" fullWidth onClick={handleCloseCashier}>
-                            ENCERRAR E FECHAR CAIXA
-                        </Button>
-                    </CardContent>
-                </Card>
-             </Grid>
+                {/* 3. SEÇÃO INFERIOR: GRÁFICO E OBSERVAÇÕES */}
+                <Grid container spacing={3}>
+                    {/* Gráfico */}
+                    <Grid item xs={12} md={5}>
+                         <Paper sx={{ p: 3, height: '100%', borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: 2 }}>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom>Distribuição de Vendas</Typography>
+                            {salesSummary.total > 0 ? (
+                                <Box sx={{ width: '100%', height: 250 }}>
+                                    <ResponsiveContainer>
+                                        <PieChart>
+                                            <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#8884d8" paddingAngle={5} dataKey="value">
+                                                {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />)}
+                                            </Pie>
+                                            <RechartsTooltip formatter={(value) => `R$ ${value.toFixed(2)}`} />
+                                            <Legend verticalAlign="bottom" height={36}/>
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </Box>
+                            ) : (
+                                <Box sx={{ flexGrow:1, display:'flex', alignItems:'center', color:'text.secondary' }}>Sem dados.</Box>
+                            )}
+                        </Paper>
+                    </Grid>
 
-          </Grid>
+                    {/* Observações e Ação */}
+                    <Grid item xs={12} md={7}>
+                        <Paper sx={{ p: 3, height: '100%', borderRadius: 2, display: 'flex', flexDirection: 'column', boxShadow: 2 }}>
+                            <Typography variant="h6" fontWeight="bold" mb={2}>Observações e Fechamento</Typography>
+                            <TextField 
+                                fullWidth multiline rows={4} 
+                                placeholder="Observações do dia (ex: quebra de caixa, sangrias manuais, problemas na operação)..." 
+                                variant="outlined"
+                                value={observations} onChange={e => setObservations(e.target.value)}
+                                sx={{ bgcolor: '#fafafa', mb: 3, flexGrow: 1 }}
+                            />
+                            <Button 
+                                variant="contained" 
+                                color="error" 
+                                size="large" 
+                                startIcon={<ExitToAppIcon />} 
+                                onClick={handleCloseCashier}
+                                sx={{ py: 2, fontWeight: 'bold', fontSize: '1rem', bgcolor: '#1a1a1a', '&:hover': { bgcolor: 'black' } }}
+                            >
+                                ENCERRAR DIA E FECHAR CAIXA
+                            </Button>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Box>
         )}
 
-        {/* Modal de Sangria */}
-        <Dialog open={isBleedModalOpen} onClose={() => setIsBleedModalOpen(false)}>
-            <DialogTitle>Realizar Sangria (Retirada)</DialogTitle>
-            <DialogContent>
-                <Typography variant="body2" color="text.secondary" paragraph>Retirada de dinheiro da gaveta para pagamentos ou cofre.</Typography>
-                <TextField label="Valor (R$)" type="number" fullWidth sx={{mb:2, mt:1}} value={bleedValue} onChange={e => setBleedValue(e.target.value)} />
-                <TextField label="Motivo / Descrição" fullWidth value={bleedDesc} onChange={e => setBleedDesc(e.target.value)} />
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setIsBleedModalOpen(false)}>Cancelar</Button>
-                <Button onClick={() => handleTransaction('bleed')} variant="contained" color="error">Confirmar Retirada</Button>
-            </DialogActions>
-        </Dialog>
+        {activeTab === 1 && (
+            <Paper sx={{ p: 0, borderRadius: 2, overflow: 'hidden' }}>
+                <TableContainer>
+                    <Table>
+                        <TableHead sx={{ bgcolor: '#f8f9fa' }}>
+                            <TableRow>
+                                <TableCell><strong>Pedido ID</strong></TableCell>
+                                <TableCell><strong>Hora</strong></TableCell>
+                                <TableCell><strong>Valor</strong></TableCell>
+                                <TableCell><strong>Pagamento</strong></TableCell>
+                                <TableCell><strong>Garçom</strong></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {todaysOrders.map((order) => (
+                                <TableRow key={order._id} hover>
+                                    <TableCell>#{order._id.slice(-4)}</TableCell>
+                                    <TableCell>{new Date(order.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</TableCell>
+                                    <TableCell fontWeight="bold">R$ {order.totalPrice.toFixed(2)}</TableCell>
+                                    <TableCell><Chip label={order.paymentMethod} size="small" /></TableCell>
+                                    <TableCell>{order.waiterId?.name || '-'}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        )}
 
       </Box>
     </AppSidebar>

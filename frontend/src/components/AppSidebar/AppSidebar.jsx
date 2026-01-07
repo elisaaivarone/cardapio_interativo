@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Importei useLocation para destacar o botão ativo
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
@@ -12,20 +12,19 @@ import Divider from '@mui/material/Divider';
 
 // Ícones
 import LogoutIcon from '@mui/icons-material/Logout';
-import DashboardIcon from '@mui/icons-material/Dashboard'; // Novo
-import PointOfSaleIcon from '@mui/icons-material/PointOfSale'; // Novo
+import DashboardIcon from '@mui/icons-material/Dashboard'; 
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale'; 
 
 import logoPath from '../../assets/burger-queen-logo.png';
 
 const AppSidebar = ({ children, user, actionButton, hideDesktopAction = false, onLogout }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Para saber em qual página estamos
-
+  const location = useLocation(); 
   const userName = user?.name || 'Usuário';
   const userImage = user?.imageUrl || null;
   const userRole = user?.role === 'admin' ? 'Administrador' : (user?.role === 'hall' ? 'Garçom' : 'Cozinha');
 
-  // Função interna de logout caso não seja passada via props, mas idealmente usa a prop onLogout
+  
   const handleLogoutClick = () => {
      if (onLogout) {
          onLogout();
@@ -35,6 +34,10 @@ const AppSidebar = ({ children, user, actionButton, hideDesktopAction = false, o
         navigate('/login');
      }
   };
+
+  // Funções de Navegação
+  const goToProducts = () => navigate('/dashboard');
+  const goToFinance = () => navigate('/financeiro');
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', flexDirection: { xs: 'column', md: 'row' }, bgcolor: '#f4f6f8' }}>
@@ -71,7 +74,7 @@ const AppSidebar = ({ children, user, actionButton, hideDesktopAction = false, o
         }}
       >
         <Box sx={{ textAlign: 'center', p: 1, mb: 2 }}>
-            <img src={logoPath} alt="Burger Queen Logo" style={{ width: '70%', height: 'auto' }} />
+            <img src={logoPath} alt="Burger Queen Logo" style={{ width: '50%', height: 'auto' }} />
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
@@ -91,29 +94,29 @@ const AppSidebar = ({ children, user, actionButton, hideDesktopAction = false, o
 
         <Divider sx={{ mb: 2 }} />
 
-        {/* --- NOVO MENU DE NAVEGAÇÃO (Só aparece para Admin) --- */}
+        {/* --- MENU DE NAVEGAÇÃO (Só aparece para Admin) --- */}
         {userRole === 'Administrador' && (
             <Box sx={{ width: '100%', mb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Button 
                     fullWidth 
                     startIcon={<DashboardIcon />}
-                    onClick={() => navigate('/dashboard')}
+                    onClick={goToProducts}
                     variant={location.pathname === '/dashboard' ? "contained" : "text"} // Destaca se estiver ativo
                     color={location.pathname === '/dashboard' ? "primary" : "inherit"}
                     sx={{ justifyContent: 'flex-start', textTransform: 'none', fontWeight: 'bold' }}
                 >
-                   Menu / Produtos
+                   Produtos
                 </Button>
 
                 <Button 
                     fullWidth 
                     startIcon={<PointOfSaleIcon />}
-                    onClick={() => navigate('/financeiro')}
+                    onClick={goToFinance}
                     variant={location.pathname === '/financeiro' ? "contained" : "text"}
                     color={location.pathname === '/financeiro' ? "primary" : "inherit"}
                     sx={{ justifyContent: 'flex-start', textTransform: 'none', fontWeight: 'bold' }}
                 >
-                   Financeiro (Caixa)
+                   Financeiro
                 </Button>
             </Box>
         )}
