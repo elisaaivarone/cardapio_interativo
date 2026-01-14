@@ -176,16 +176,16 @@ npm run dev
 ## 📸 Screenshots
 
 **Dashboard do Administrador (Gerenciamento de Itens):**
-![Lista de itens do cardápio](/screenshots/admin-dashboard.png)
+![Lista de itens do cardápio](./screenshots/admin-dashboard.png)
 
 **Tela de Pedidos (Garçom/Salão):**
-![Interface de pedidos estilo tablet com menu à esquerda e resumo do pedido à direita](/screenshots/order-screen-hall.png)
+![Interface de pedidos estilo tablet com menu à esquerda e resumo do pedido à direita](./screenshots/order-screen-hall.png)
 
 **Tela da Cozinha:**
-![Visualização dos pedidos pendentes em cards para a cozinha](/screenshots/kitchen-view.png)
+![Visualização dos pedidos pendentes em cards para a cozinha](./screenshots/kitchen-view.png)
 
 **Dashboard Financeiro:**
-![Visualização do fechamento de caixa e relatórios](/screenshots/admin-finance.png)
+![Visualização do fechamento de caixa e relatórios](./screenshots/admin-finance.png)
 
 ---
 
