@@ -4,8 +4,7 @@
 
 * Sistema de Ponto de Venda (PDV) completo para uma hamburgueria fictícia, construído como um projeto Full-Stack utilizando a MERN Stack. Permite o gerenciamento de produtos, controle de usuários por função (Admin, Salão, Cozinha) e o fluxo completo de pedidos, desde a anotação até a entrega.
 
-**[Link para o Deploy da Aplicação]** (Será adicionado após o deploy)
-**[Link para o Deploy da API]**  
+**[https://cardapio-interativo-five.vercel.app/login]**
 
 ---
 
@@ -23,6 +22,16 @@
   * Associação de produtos a menus específicos ("Café da Manhã" ou "Resto do Dia").
   * Notificações *Toast* para feedback de ações (ex: "Item deletado com sucesso")
   * Upload/Referência de imagens (atualmente por URL).
+* **💰 Módulo Financeiro & Caixa (Novo!):**
+  * Um sistema completo de gestão de fluxo de caixa (PDV) integrado aos pedidos.
+    * **Abertura e Fechamento de Caixa:** Controle rigoroso de turnos com fundo de troco inicial.
+    * **Conferência de Valores:** Tabela detalhada para conferir vendas em Dinheiro, Pix, Crédito e Débito.
+    * **Cálculos Automáticos:** Sistema inteligente que desconta trocos e sangrias (retiradas) automaticamente para prever o valor exato na gaveta.
+    * **Dashboard Visual:** Gráficos de rosca (Donut Charts) para visualizar a distribuição das formas de pagamento em tempo real.
+  * **Histórico e Relatórios:**
+    * Consulta de fechamentos anteriores por período (data).
+    * Resumo financeiro consolidado (Soma de períodos).
+  * **Impressão de Comprovantes:** Geração de relatórios fiscais/gerenciais formatados para impressoras térmicas ou A4 (PDF).
 * **Painel de Pedidos - Salão (`/order`):**
   * Layout profissional de 3 colunas otimizado para tablets (Navegação/Usuário, Menu, Pedido).
     * **Coluna de Menu:** Busca dinâmica de produtos da API, separados por abas de Menu (Café da Manhã / Almoço).
@@ -81,6 +90,9 @@ Este projeto foi guiado pelas seguintes histórias de usuário:
   * Dotenv (Variáveis de Ambiente)
 * **Banco de Dados:**
   * MongoDB Atlas (Hospedagem Cloud)
+* **Visualização de Dados:** [Recharts](https://recharts.org/) (Gráficos financeiros interativos)
+* **Relatórios e Impressão:** [React-to-Print](https://github.com/gregnb/react-to-print)
+* **Matemática Financeira:** [Currency.js](https://currency.js.org/) (Para cálculos monetários precisos e seguros contra erros de ponto flutuante)
 
 ---
 
@@ -172,12 +184,16 @@ npm run dev
 **Tela da Cozinha:**
 ![Visualização dos pedidos pendentes em cards para a cozinha](/screenshots/kitchen-view.png)
 
+**Dashboard Financeiro:**
+![Visualização do fechamento de caixa e relatórios](/screenshots/admin-finance.png)
+
 ---
 
 ## ⏭️ Próximos Passos
 
 * [ ] Implementar funcionalidade "Esqueci minha senha".
-* [ ] Adicionar gerenciamento de usuários (CRUD) no painel do Admin.
+* [ ] Adicionar gerenciamento de clientes e funcionários (CRUD) no painel do Admin.
+* [x] Adicionar sistema financeiro e relatório
 * [x] Adicionar quantidade aos itens do pedido.
 * [x] Melhorar UI/UX (talvez com uma biblioteca de componentes como Material UI ou Chakra UI).
 * [x] Adicionar testes unitários e de integração.
