@@ -137,28 +137,41 @@ export const processPayment = async (orderId, paymentData) => {
 
 // --- ROTAS DO CAIXA (FINANCEIRO) ---
 
+// Função para obter o status atual do caixa
 export const getCashierStatus = async () => {
   const response = await api.get('/cashier/status');
   return response.data;
 };
 
+// Função para abrir o caixa
 export const openCashier = async (initialBalance) => {
   const response = await api.post('/cashier/open', { initialBalance });
   return response.data;
 };
 
+// Função para fechar o caixa
 export const closeCashier = async (finalBalanceDeclared) => {
   const response = await api.post('/cashier/close', { finalBalanceDeclared });
   return response.data;
 };
 
+// Função para adicionar uma transação (suprimento ou sangria)
 export const addTransaction = async (type, description, value) => {
   // type: 'supply' (suprimento) ou 'bleed' (sangria)
   const response = await api.post('/cashier/transaction', { type, description, value });
   return response.data;
 };
 
+// Função para obter as transações do caixa atual
 export const getTransactions = async () => {
   const response = await api.get('/cashier/transactions');
+  return response.data;
+};
+
+// Função para obter o histórico do caixa em um intervalo de datas
+export const getCashierHistory = async (startDate, endDate) => {
+  const response = await api.get('/cashier/history', {
+    params: { startDate, endDate }
+  });
   return response.data;
 };

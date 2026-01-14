@@ -74,7 +74,7 @@ const AppSidebar = ({ children, user, actionButton, hideDesktopAction = false, o
         }}
       >
         <Box sx={{ textAlign: 'center', p: 1, mb: 2 }}>
-            <img src={logoPath} alt="Burger Queen Logo" style={{ width: '50%', height: 'auto' }} />
+            <img src={logoPath} alt="Burger Queen Logo" style={{ width: '30%', height: 'auto' }} />
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>

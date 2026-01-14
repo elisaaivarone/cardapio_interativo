@@ -32,7 +32,7 @@ router.post('/open', authMiddleware, async (req, res) => {
     const { initialBalance } = req.body;
 
     const newCashier = new Cashier({
-      operator: req.user.id, // Pega o ID do usuário logado (Admin)
+      operator: req.user.id, 
       initialBalance: Number(initialBalance),
       openedAt: new Date(),
       status: 'open'
@@ -53,7 +53,7 @@ router.post('/close', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Não há caixa aberto para fechar.' });
     }
 
-    const { finalBalanceDeclared } = req.body; // O valor que o usuário contou na gaveta
+    const { finalBalanceDeclared } = req.body; 
 
     // 1. Buscar todos os pedidos PAGOS feitos neste período
     const orders = await Order.find({
@@ -142,7 +142,7 @@ router.post('/transaction', authMiddleware, async (req, res) => {
       cashierId: activeCashier._id,
       user: req.user.id, 
       type,              
-      description,       // Ex: "Pagamento Fornecedor"
+      description,     
       value: Number(value),
       date: new Date()
     });
@@ -171,6 +171,36 @@ router.get('/transactions', authMiddleware, async (req, res) => {
       .sort({ date: -1 }); 
 
     res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 6. HISTÓRICO DE FECHAMENTOS (GET /api/cashier/history)
+router.get('/history', authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Filtro básico: Caixas fechados
+    let filter = { status: 'closed' };
+
+    // Se tiver datas, adiciona ao filtro
+    if (startDate || endDate) {
+      filter.openedAt = {};
+      if (startDate) filter.openedAt.$gte = new Date(startDate);
+      if (endDate) {
+          // Ajuste para pegar até o final do dia
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          filter.openedAt.$lte = end; 
+      }
+    }
+
+    const history = await Cashier.find(filter)
+      .populate('operator', 'name') 
+      .sort({ openedAt: -1 }); 
+
+    res.json(history);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
