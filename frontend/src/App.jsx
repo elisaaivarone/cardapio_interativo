@@ -13,7 +13,8 @@ import Order from './pages/Order/Order';
 import Kitchen from './pages/Kitchen/Kitchen';
 import ProtectedRoute from './components/ProtectedRoute';
 import Cashier from './pages/Cashier/Cashier';
-
+import Settings from './pages/Settings/Settings';
+import RegisterInvite from './pages/Register/RegisterInvite';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           {/* Rotas públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/register-invite" element={<RegisterInvite />} />
 
           {/* Rota do Admin (Gerente) */}
           <Route path="/dashboard" element={ <ProtectedRoute role="admin"><Dashboard /></ProtectedRoute>} />
@@ -36,6 +38,8 @@ function App() {
 
           {/* Rota do Caixa */}
           <Route path="/financeiro" element={<ProtectedRoute role="admin"><Cashier /></ProtectedRoute>} />
+
+          <Route path="/equipe" element={<ProtectedRoute role={['admin', 'Administrador','hall', 'kitchen']}><Settings /></ProtectedRoute>} />
 
           {/* Rota Padrão (Redirecionar) */}
           <Route path="*" element={<Navigate to="/login" />} />

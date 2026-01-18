@@ -9,16 +9,16 @@ const theme = createTheme({
   palette: {
     primary: {
       main: primaryColor, 
-      // light: '#F5BE6D'', 
-      // dark: '#D88E23', 
+      light: '#F5BE6D',
+      dark: '#D88E23', 
       contrastText: 'rgba(0, 0, 0, 0.87)', 
       contrastText2: '#4C4A55'
     },
     secondary: {
       main: secondaryColor, 
-      // light: '#5DB09C' ,
-      // dark: '#166F58',
-      contrastText: '#ffffff ', 
+      light: '#5DB09C' ,
+      dark: '#166F58',
+      contrastText: '#ffffff', 
     },
     //(error, warning, info, success)
     success: {

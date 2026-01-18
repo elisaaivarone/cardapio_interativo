@@ -175,3 +175,66 @@ export const getCashierHistory = async (startDate, endDate) => {
   });
   return response.data;
 };
+
+// --- MÓDULO DE EQUIPE ---
+
+// Listar todos os usuários
+export const getTeam = async () => {
+  const response = await api.get('/team');
+  return response.data;
+};
+
+// Gerar convite
+export const inviteMember = async (email, role) => {
+  const response = await api.post('/team/invite', { email, role });
+  return response.data; 
+};
+
+// Remover usuário
+export const deleteMember = async (id) => {
+  const response = await api.delete(`/team/${id}`);
+  return response.data;
+};
+
+// --- MÓDULO DE USUÁRIO (PERFIL) ---
+
+export const updateProfile = async (userId, data) => {
+  const response = await api.put('/users/profile', { userId, ...data });
+  return response.data;
+};
+
+export const changePassword = async (userId, currentPassword, newPassword) => {
+  const response = await api.put('/users/password', { userId, currentPassword, newPassword });
+  return response.data;
+};
+
+export const updateEmail = async (userId, newEmail) => {
+  const response = await api.put('/users/email', { userId, newEmail });
+  return response.data;
+};
+
+// Validar token ao abrir a página
+export const validateInviteToken = async (token) => {
+  const response = await api.get(`/auth/invite/${token}`);
+  return response.data;
+};
+
+// Finalizar o cadastro
+export const registerWithInvite = async (data) => {
+  // data = { token, name, password }
+  const response = await api.post('/auth/register-invite', data);
+  return response.data;
+};
+
+// Atualizar imagem de perfil
+export const updateProfileImage = async (userId, file) => {
+  const formData = new FormData();
+  formData.append('image', file); // 'image' é o nome do campo que o backend espera
+  formData.append('userId', userId);
+
+  // Faz a requisição PUT para atualizar a imagem do usuário
+  const response = await api.put('/users/update-image', formData);
+  return response.data;
+};
+
+export default api;

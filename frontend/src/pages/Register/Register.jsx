@@ -1,197 +1,197 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom'; 
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-// --- IMPORTAÇÕES DO MUI ---
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert'; // Para erros
-// Componentes para o Dropdown de "Função"
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-// Ícones
-import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Avatar,
+  IconButton,
+  InputAdornment
+} from '@mui/material';
 
-import { registerUser } from '../../services/api';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
-function Register() {
-  const navigate = useNavigate();
-  
-  // Estados do formulário
+import logo from '../../assets/burger-queen-logo.png';
+import { registerUser } from '../../services/api'; 
+
+const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('hall'); 
+  const [whatsapp, setWhatsapp] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   
-  // Estados de UI
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(''); 
+  const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(''); 
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('role', role);
-
-    if (profileImage) {
-      formData.append('profileImage', profileImage); 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImage(file);
+      setPreviewImage(URL.createObjectURL(file));
     }
-    
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      return toast.error('As senhas não coincidem.');
+    }
+
     try {
-      const result = await registerUser(formData); 
-      toast.success(result.message || 'Usuário registrado com sucesso!'); 
-      navigate('/login');
-    } catch (err) {
-      console.error('Erro no registro:', err);
-      setError(err.message || 'Erro ao registrar. Verifique os dados.'); 
-    } finally {
-      setLoading(false);
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('whatsapp', whatsapp);
+      formData.append('role', 'client'); 
+      
+      if (profileImage) {
+        formData.append('profileImage', profileImage);
+      }
+
+      await registerUser(formData);
+
+      toast.success('Cadastro realizado com sucesso!');
+ 
+      // Futuramente logar direto e mandar pro /delivery
+      navigate('/login'); 
+      
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Erro ao cadastrar.');
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <CssBaseline />
+    <Container maxWidth="xs">
       <Box
         sx={{
           marginTop: 8,
-          marginBottom: 8, 
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          maxWidth: '700px',
-          margin: 'auto',
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}> 
-          <PersonAddAltIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Registrar Novo Funcionário
-        </Typography>
+        <img src={logo} alt="Logo Queen Burger" style={{ width: 120, marginBottom: 16 }} />
         
-        {/* Formulário */}
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 5, width: '100%' }}>
-          <Grid container spacing={2}>
-            <Grid xs={12} sm={6}>
-              <TextField
-                autoComplete="name"
-                name="name"
-                required
-                fullWidth
-                id="name"
-                label="Nome Completo"
-                autoFocus
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </Grid>
-            <Grid xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                id="email"
-                label="Email"
-                name="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Grid>
-            <Grid xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                name="password"
-                label="Senha"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Grid>
-            <Grid xs={12} sm={6}>
-              <FormControl fullWidth required>
-                <InputLabel id="role-select-label">Função</InputLabel>
-                <Select
-                  labelId="role-select-label"
-                  id="role"
-                  value={role}
-                  label="Função"
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <MenuItem value="hall">Salão (Garçom)</MenuItem>
-                  <MenuItem value="kitchen">Cozinha</MenuItem>
-                  <MenuItem value="admin">Admin</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid  xs={12} sm={6}>
-              <Button
-                variant="outlined"
-                component="label" 
-                fullWidth
-              >
-                Upload Foto de Perfil
-                <input 
-                  type="file" 
-                  hidden // O input real fica escondido
-                  accept="image/png, image/jpeg" 
-                  onChange={(e) => setProfileImage(e.target.files[0])} 
-                />
-              </Button>
-                {profileImage && (
-                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-                  Arquivo: {profileImage.name}
-                </Typography>
-              )}
-            </Grid>
-          </Grid>
+        <Paper elevation={3} sx={{ padding: 4, width: '100%', borderRadius: 2 }}>
+          <Typography component="h1" variant="h5" align="center" fontWeight="bold" gutterBottom>
+            Crie sua conta
+          </Typography>
+          <Typography variant="body2" color="primary.contrastText2" align="center" sx={{ mb: 3 }}>
+            Peça seu lanche favorito em instantes!
+          </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
-              {error}
-            </Alert>
-          )}
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="profile-image-upload"
+                type="file"
+                onChange={handleImageChange}
+              />
+              <label htmlFor="profile-image-upload">
+                <IconButton component="span" sx={{ p: 0 }}>
+                  <Avatar
+                    src={previewImage}
+                    sx={{ width: 80, height: 80, bgcolor: 'secondary.main' }}
+                  >
+                    <CloudUploadIcon />
+                  </Avatar>
+                </IconButton>
+              </label>
+            </Box>
+            <Typography variant="caption" display="block" align="center" color="primary.contrastText2" sx={{ mb: 2 }}>
+              Toque na foto para alterar
+            </Typography>
 
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary" 
-            disabled={loading}
-            sx={{ mt: 3, mb: 2, p: 1.5, fontSize: '1rem', fontWeight: 'bold' }}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Registrar'}
-          </Button>
-          
-          <Grid container justifyContent="flex-end">
-            <Grid>
-              <Link component={RouterLink} to="/login" variant="body2">
-                {"Já tem uma conta? Faça login"}
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Nome Completo"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              color="secondary.light"
+            />
+            <TextField
+              margin="normal" required fullWidth
+              label="WhatsApp"
+              placeholder="(00) 00000-0000"
+              value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)}
+              color="secondary"
+              slotProps={{
+                input: {
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <WhatsAppIcon color="secondary" /> 
+                        </InputAdornment>
+                    ),
+                },
+              }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="E-mail"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              color="secondary.light"
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Senha"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              color="secondary.light"
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Confirmar Senha"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              color="secondary.light"
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', fontWeight: 'bold', '&:hover': { bgcolor: 'secondary.dark' } }}
+            >
+              CADASTRAR
+            </Button>
+
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Link to="/login" style={{ textDecoration: 'none', color: '#166F58', fontSize: '0.9rem' }}>
+                Já tem uma conta? Faça Login
               </Link>
-            </Grid>
-          </Grid>
-        </Box>
+            </Box>
+
+          </Box>
+        </Paper>
       </Box>
     </Container>
   );
-}
+};
 
 export default Register;
