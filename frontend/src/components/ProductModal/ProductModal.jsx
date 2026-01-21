@@ -1,13 +1,30 @@
 import { useState, useEffect } from 'react';
-import styles from './ProductModal.module.css';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Box,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormGroup,
+  Checkbox,
+  IconButton
+} from '@mui/material';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import CloseIcon from '@mui/icons-material/Close';
 
-function ProductModal({ isOpen, onClose, product, onAddToCart }) {
+const ProductModal = ({ isOpen, onClose, product, onAddToCart }) => {
   const [burgerType, setBurgerType] = useState('bovino');
   const [extras, setExtras] = useState({ queijo: false, ovo: false });
 
-  // Reseta o estado quando o modal é fechado
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
       setBurgerType('bovino');
       setExtras({ queijo: false, ovo: false });
     }
@@ -15,16 +32,34 @@ function ProductModal({ isOpen, onClose, product, onAddToCart }) {
 
   if (!isOpen || !product) return null;
 
-  // Verifica se o item é um hambúrguer para mostrar as opções
-  const isBurger = product.category === 'Lanches' && product.menu === 'allDay';
+  // --- REGRAS DE EXIBIÇÃO ---
+  // É um Hambúrguer? (Para mostrar opção de carne e ovo)
+  const isBurger = product.category === 'Lanches'; 
+  
+  // É Bebida? (Para esconder todos os extras)
+  const isDrink = product.category === 'Bebidas';
+
+  // Pode ter Queijo? (Hambúrgueres e Acompanhamentos/Batata)
+  const canAddCheese = !isDrink;
+
+  // Pode ter Ovo? (Apenas Hambúrgueres)
+  const canAddEgg = isBurger; 
 
   const handleExtraChange = (extra) => {
-    setExtras(prev => ({ ...prev, [extra]: !prev[extra] }));
+    setExtras((prev) => ({ ...prev, [extra]: !prev[extra] }));
+  };
+
+  // Calcula o preço total visualmente
+  const getCurrentTotal = () => {
+    let total = product.price;
+    if (canAddCheese && extras.queijo) total += 1.00; 
+    if (canAddEgg && extras.ovo) total += 1.00;   
+    return total;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     let price = product.price;
     let name = product.name;
     let details = [];
@@ -32,26 +67,25 @@ function ProductModal({ isOpen, onClose, product, onAddToCart }) {
     if (isBurger) {
       details.push(burgerType);
     }
-    if (extras.queijo) {
-      price += 1; 
+
+    if (canAddCheese && extras.queijo) {
+      price += 1;
       details.push('queijo');
     }
-    if (extras.ovo) {
-      price += 1; 
+    if (canAddEgg && extras.ovo) {
+      price += 1;
       details.push('ovo');
     }
 
-    // Cria um nome final para o item no carrinho
     if (details.length > 0) {
       name = `${product.name} (${details.join(', ')})`;
     }
 
-    // Cria o item final para o carrinho
     const cartItem = {
       ...product,
       name,
       price,
-      orderItemId: Date.now() 
+      orderItemId: Date.now()
     };
 
     onAddToCart(cartItem);
@@ -59,54 +93,103 @@ function ProductModal({ isOpen, onClose, product, onAddToCart }) {
   };
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <h2>{product.name}</h2>
-        <p>R$ {product.price.toFixed(2)} (base)</p>
-        
-        <form onSubmit={handleSubmit}>
-          {/* Mostra opções de tipo APENAS se for hambúrguer */}
-          {isBurger && (
-            <fieldset className={styles.options}>
-              <legend>Tipo de Hambúrguer</legend>
-              <label>
-                <input type="radio" name="burgerType" value="bovino" checked={burgerType === 'bovino'} onChange={e => setBurgerType(e.target.value)} />
-                Bovino
-              </label>
-              <label>
-                <input type="radio" name="burgerType" value="frango" checked={burgerType === 'frango'} onChange={e => setBurgerType(e.target.value)} />
-                Frango
-              </label>
-              <label>
-                <input type="radio" name="burgerType" value="vegetariano" checked={burgerType === 'vegetariano'} onChange={e => setBurgerType(e.target.value)} />
-                Vegetariano
-              </label>
-            </fieldset>
-          )}
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+    >
+      <form onSubmit={handleSubmit}>
+        {/* HEADER */}
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'primary.main', color: 'white' }}>
+          <Typography variant="h6" fontWeight="bold">
+            {product.name}
+          </Typography>
+          <IconButton onClick={onClose} sx={{ color: 'white' }} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
-          {/* Mostra opções de extra (exceto para bebidas) */}
-          {product.category !== 'Bebidas' && (
-            <fieldset className={styles.options}>
-              <legend>Extras (R$ 1,00 cada)</legend>
-              <label>
-                <input type="checkbox" checked={extras.queijo} onChange={() => handleExtraChange('queijo')} />
-                Queijo
-              </label>
-              <label>
-                <input type="checkbox" checked={extras.ovo} onChange={() => handleExtraChange('ovo')} />
-                Ovo
-              </label>
-            </fieldset>
-          )}
+        <DialogContent dividers>
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h4" color="primary.main" fontWeight="bold">
+                    R$ {getCurrentTotal().toFixed(2)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                    Preço base: R$ {product.price.toFixed(2)}
+                </Typography>
+            </Box>
 
-          <div className={styles.buttons}>
-            <button type="button" onClick={onClose}>Cancelar</button>
-            <button type="submit">Adicionar ao Pedido</button>
-          </div>
-        </form>
-      </div>
-    </div>
+            {/* OPÇÃO 1: TIPO DE CARNE (Apenas se for Lanche) */}
+            {isBurger && (
+                <Box sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                    <FormControl component="fieldset">
+                        <FormLabel component="legend" sx={{ fontWeight: 'bold', mb: 1, color: '#333' }}>
+                           Escolha a Carne:
+                        </FormLabel>
+                        <RadioGroup
+                            row
+                            name="burgerType"
+                            value={burgerType}
+                            onChange={(e) => setBurgerType(e.target.value)}
+                        >
+                            <FormControlLabel value="bovino" control={<Radio color="primary" />} label="Bovino" />
+                            <FormControlLabel value="frango" control={<Radio color="primary" />} label="Frango" />
+                            <FormControlLabel value="vegetariano" control={<Radio color="success" />} label="Vegetariano" />
+                        </RadioGroup>
+                    </FormControl>
+                </Box>
+            )}
+
+            {/* OPÇÃO 2: EXTRAS (Se não for bebida) */}
+            {!isDrink && (
+                <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                    <FormControl component="fieldset" variant="standard">
+                        <FormLabel component="legend" sx={{ fontWeight: 'bold', mb: 1, color: '#333' }}>
+                            Turbine seu pedido (+ R$ 1,00 cada):
+                        </FormLabel>
+                        <FormGroup row>
+                            {canAddCheese && (
+                              <FormControlLabel
+                                  control={
+                                      <Checkbox checked={extras.queijo} onChange={() => handleExtraChange('queijo')} />
+                                  }
+                                  label="Queijo Extra"
+                              />
+                            )}
+                            
+                            {canAddEgg && (
+                              <FormControlLabel
+                                  control={
+                                      <Checkbox checked={extras.ovo} onChange={() => handleExtraChange('ovo')} />
+                                  }
+                                  label="Ovo"
+                              />
+                            )}
+                        </FormGroup>
+                    </FormControl>
+                </Box>
+            )}
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+          <Button onClick={onClose} color="inherit" sx={{color:'#666'}}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            startIcon={<AddShoppingCartIcon />}
+            size="large"
+            sx={{ fontWeight: 'bold', px: 4 }}
+          >
+            Adicionar
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
-}
+};
 
 export default ProductModal;
