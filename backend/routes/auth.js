@@ -161,7 +161,8 @@ router.post('/register-invite', async (req, res) => {
 // 3. RECUPERAÇÃO DE SENHA (ESQUECI SENHA)
 // ==========================================
 
-router.post('/forgot-password', async (req, res) => {
+// ROTA 1: SOLICITA O LINK (Gera Token)
+router.post('/reset-password', async (req, res) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });

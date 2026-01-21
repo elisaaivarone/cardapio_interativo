@@ -105,7 +105,7 @@ function Kitchen() {
         ) : (
           <Grid container spacing={3}>
             {pendingOrders.map(order => (
-              <Grid item key={order._id} xs={12} sm={6} md={4} lg={3}>
+              <Grid key={order._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                 <Card 
                   sx={{ 
                     height: '100%', 

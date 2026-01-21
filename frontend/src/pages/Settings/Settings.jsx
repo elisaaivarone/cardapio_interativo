@@ -5,7 +5,7 @@ import {
   MenuItem, Select, FormControl, InputLabel, IconButton, 
   Chip, Dialog, DialogTitle, DialogContent, DialogActions, Grid,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-  Divider
+  Divider, Avatar
 } from '@mui/material';
 // Ícones
 import DeleteIcon from '@mui/icons-material/Delete';

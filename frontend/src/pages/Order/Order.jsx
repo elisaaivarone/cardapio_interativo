@@ -250,16 +250,20 @@ function Order() {
 
   const handleMarkAsDelivered = async (orderId) => {
     try {
-      await updateOrderStatus(orderId, "delivered");
-      setReadyOrders((prevOrders) =>
-        prevOrders.filter((order) => order._id !== orderId)
-      );
+        await updateOrderStatus(orderId, 'delivered');
+        setReadyOrders((prevOrders) => 
+            prevOrders.map((order) => 
+                order._id === orderId 
+                    ? { ...order, status: 'delivered' } // Muda só o status
+                    : order // Mantém os outros iguais
+            )
+        );
       toast.info("Entregue!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao atualizar status.");
+    } catch (error) {
+        console.error("Erro ao entregar:", error);
+        toast.error("Erro ao atualizar status.");
     }
-  };
+};
 
   // Abre Modal de Pagamento
   const handleOpenPayment = (order) => {
@@ -439,14 +443,14 @@ function Order() {
                 autoFocus
                 sx={{
                   mb: 1.5,
-                  bgcolor: "grey.700",
+                  bgcolor: "secondary.contrastText",
                   borderRadius: 1,
                   "& .MuiInputBase-input": {
-                    color: "white",
-                    fontSize: "1.2rem",
+                    color: "primary.contrastText2",
+                    fontSize: "1rem",
                     fontWeight: "bold",
                   },
-                  "& label": { color: "grey.400" },
+                  "& label": { color: "grey.600" },
                 }}
               />
             ) : (
@@ -460,10 +464,13 @@ function Order() {
                 autoFocus
                 sx={{
                   mb: 1.5,
-                  bgcolor: "grey.700",
+                  bgcolor: "secondary.contrastText",
                   borderRadius: 1,
-                  "& .MuiInputBase-input": { color: "white" },
-                  "& label": { color: "grey.400" },
+                  "& .MuiInputBase-input": { 
+                    color: "primary.contrastText2" },
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                  "& label": { color: "grey.600" },
                 }}
               />
             )}
@@ -725,6 +732,8 @@ function Order() {
       </Box>
     </Paper>
   );
+
+  // --- BOTÃO CARRINHO (Telas Pequenas)---
   const cartButton = (
     <IconButton color="inherit" onClick={handleDrawerToggle} sx={{ ml: 1 }}>
       <Badge badgeContent={currentOrder.length} color="secondary">

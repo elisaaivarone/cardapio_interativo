@@ -5,15 +5,15 @@ import { jwtDecode } from 'jwt-decode';
 // --- IMPORTAÇÕES DO MUI ---
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline'; // Garante fundo consistente
+import CssBaseline from '@mui/material/CssBaseline'; 
 import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link'; // O Link do MUI
+import Link from '@mui/material/Link'; 
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import CircularProgress from '@mui/material/CircularProgress'; // Para o loading
-import Alert from '@mui/material/Alert'; // Para exibir erros
+import CircularProgress from '@mui/material/CircularProgress'; 
+import Alert from '@mui/material/Alert'; 
 // Ícones
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
@@ -111,6 +111,15 @@ function Login() {
               {error}
             </Alert>
           )}
+          <Box sx={{ textAlign: 'right', mt: 1 }}>
+                <Link 
+                    component={RouterLink}
+                    to="/forgot-password" 
+                    style={{ textDecoration: 'none', color: '#4C4A55', fontSize: '0.875rem', fontWeight: 'bold' }}
+                >
+                    Esqueci minha senha
+                </Link>
+            </Box>
 
           <Button
             type="submit"

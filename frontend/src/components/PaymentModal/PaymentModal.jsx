@@ -15,6 +15,14 @@ const PaymentModal = ({ isOpen, onClose, order, onConfirmPayment }) => {
   const [cashReceived, setCashReceived] = useState('');
   const [change, setChange] = useState(0);
 
+  useEffect(() => {
+    if (isOpen) {
+      setCashReceived(''); 
+      setChange(0);
+      setMethod('credit'); 
+    }
+  }, [isOpen]);
+
   // Calcula o troco automaticamente quando o valor recebido muda
   useEffect(() => {
     if (method === 'cash' && order) {

@@ -15,6 +15,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Cashier from './pages/Cashier/Cashier';
 import Settings from './pages/Settings/Settings';
 import RegisterInvite from './pages/Register/RegisterInvite';
+import ForgotPassword from './pages/Login/ForgotPassword';
+import ResetPassword from './pages/Login/ResetPassword';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register-invite" element={<RegisterInvite />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Rota do Admin (Gerente) */}
           <Route path="/dashboard" element={ <ProtectedRoute role="admin"><Dashboard /></ProtectedRoute>} />

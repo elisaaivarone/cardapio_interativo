@@ -9,9 +9,10 @@ const userSchema = new mongoose.Schema({
 
   whatsapp: { type: String, default: '' },
 
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-});
+  resetPasswordToken: { type: String },
+  resetPasswordExpire: { type: Date },
+  
+}, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 
